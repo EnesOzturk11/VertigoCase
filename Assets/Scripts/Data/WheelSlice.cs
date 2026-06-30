@@ -17,6 +17,9 @@ namespace VertigoCase.Data
         [Tooltip("Amount multiplier applied to the reward's base amount.")]
         public int multiplier = 1;
 
+        [Tooltip("Selection weight. Higher = comes up more often. Rare rewards / the bomb get a lower weight.")]
+        public int weight = 1;
+
         // Derived from the reward type, so there is a single source of truth (no extra bool to keep in sync).
         public bool IsBomb => reward != null && reward.type == RewardType.Bomb;
     }
