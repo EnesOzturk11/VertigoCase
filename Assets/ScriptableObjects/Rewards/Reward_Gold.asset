@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553c12ab9559e40a2884373f3a89cb89, type: 3}
   m_Name: Reward_Gold
   m_EditorClassIdentifier: 
-  displayName: 
-  type: 0
-  icon: {fileID: 0}
-  baseAmount: 100
+  displayName: Gold
+  type: 1
+  icon: {fileID: 21300000, guid: f8865ca4a3c8a4204ba41252bf9a2a0a, type: 3}
+  baseAmount: 50
