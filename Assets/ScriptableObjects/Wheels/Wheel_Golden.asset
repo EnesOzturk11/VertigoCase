@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3845d43aa26d4d29a3a62efafc7b1e3, type: 3}
   m_Name: Wheel_Golden
   m_EditorClassIdentifier: 
-  wheelName: 
-  baseSprite: {fileID: 0}
-  indicatorSprite: {fileID: 0}
-  hasBomb: 1
+  wheelName: Golden
+  baseSprite: {fileID: 21300000, guid: 9f0765d4679434bfab147f60ea35f63d, type: 3}
+  indicatorSprite: {fileID: 21300000, guid: b34cc095b0e714356b1149e2357058f6, type: 3}
+  hasBomb: 0
   slices: []

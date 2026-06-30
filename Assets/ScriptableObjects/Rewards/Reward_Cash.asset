@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553c12ab9559e40a2884373f3a89cb89, type: 3}
   m_Name: Reward_Cash
   m_EditorClassIdentifier: 
-  displayName: 
+  displayName: Cash
   type: 0
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 547189f9867d84ed1b36fa11ca0bc738, type: 3}
   baseAmount: 100

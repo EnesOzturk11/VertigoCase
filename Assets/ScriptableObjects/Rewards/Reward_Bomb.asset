@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 553c12ab9559e40a2884373f3a89cb89, type: 3}
   m_Name: Reward_Bomb
   m_EditorClassIdentifier: 
-  displayName: 
-  type: 0
-  icon: {fileID: 0}
-  baseAmount: 100
+  displayName: Bomb
+  type: 4
+  icon: {fileID: 21300000, guid: 798d5f87b9a5748ab8d4044c1ddfb816, type: 3}
+  baseAmount: 0
