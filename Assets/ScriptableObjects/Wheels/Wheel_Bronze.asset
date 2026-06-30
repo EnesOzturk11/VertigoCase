@@ -19,17 +19,25 @@ MonoBehaviour:
   slices:
   - reward: {fileID: 11400000, guid: a8bcc20499e3c4949a583a23aabaaf94, type: 2}
     multiplier: 0
+    weight: 2
   - reward: {fileID: 11400000, guid: b07d9f5d2bc1646379c22af744f9b662, type: 2}
     multiplier: 1
+    weight: 2
   - reward: {fileID: 11400000, guid: 7d6665cdec53f449692e02d5abbeeddb, type: 2}
     multiplier: 3
+    weight: 3
   - reward: {fileID: 11400000, guid: b508b4ae828324ed89cee0aac3ba5e4e, type: 2}
     multiplier: 2
+    weight: 2
   - reward: {fileID: 11400000, guid: 7d6665cdec53f449692e02d5abbeeddb, type: 2}
     multiplier: 10
+    weight: 5
   - reward: {fileID: 11400000, guid: 7d6665cdec53f449692e02d5abbeeddb, type: 2}
     multiplier: 7
+    weight: 4
   - reward: {fileID: 11400000, guid: b508b4ae828324ed89cee0aac3ba5e4e, type: 2}
     multiplier: 5
+    weight: 1
   - reward: {fileID: 11400000, guid: b07d9f5d2bc1646379c22af744f9b662, type: 2}
     multiplier: 2
+    weight: 1
