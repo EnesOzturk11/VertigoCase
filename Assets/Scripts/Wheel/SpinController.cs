@@ -38,6 +38,9 @@ namespace VertigoCase.Wheel
                     Debug.Log($"[SpinController] Landed on '{(slice.reward != null ? slice.reward.name : "null")}' (bomb={slice.IsBomb})");
         }
 
+        // Swap the wheel this controller resolves and rotates. Must stay in sync with WheelView's data.
+        public void SetWheel(WheelData data) => wheelData = data;
+
         [ContextMenu("Test Spin")] // right-click the component header in Play mode to fire a spin without UI
         public void Spin()
         {

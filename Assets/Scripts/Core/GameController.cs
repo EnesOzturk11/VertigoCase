@@ -1,0 +1,129 @@
+using System;
+using UnityEngine;
+using VertigoCase.Data;
+using VertigoCase.Economy;
+using VertigoCase.UI;
+using VertigoCase.Wheel;
+
+namespace VertigoCase.Core
+{
+    /// <summary>
+    /// The brain that wires the Day 3 pieces into one game loop. SpinController announces a result;
+    /// this controller interprets it (bomb vs reward), updates the bank, advances the zone, swaps the
+    /// wheel and drives the state machine. It owns the plain-C# services and re-broadcasts their
+    /// events as a single hub the UI listens to (Observer + Dependency Inversion).
+    /// </summary>
+    public class GameController : MonoBehaviour
+    {
+        [Header("Scene refs")]
+        [SerializeField] private SpinController spinController;
+        [SerializeField] private WheelView wheelView;
+
+        [Header("Wheel data (ZoneType mapping)")]
+        [SerializeField] private WheelData bronzeWheel;   // Normal
+        [SerializeField] private WheelData silverWheel;   // Safe
+        [SerializeField] private WheelData goldenWheel;   // Super
+
+        // Plain-C# services: no scene presence, owned by this controller.
+        private ZoneService zones = new ZoneService();
+        private readonly RewardService bank = new RewardService();
+        private readonly GameStateMachine fsm = new GameStateMachine();
+
+        // Events the UI listens to (hub). GameController is the single publisher.
+        public event Action<int> OnBalanceChanged;
+        public event Action<int, ZoneType> OnZoneChanged;
+        public event Action<GameState> OnStateChanged;
+        public event Action<int> OnCashedOut;   // amount taken when the player leaves (UI can celebrate)
+
+        public GameState State => fsm.Current;
+        public bool CanLeave => fsm.Current == GameState.Idle &&
+                                (zones.CurrentType == ZoneType.Safe || zones.CurrentType == ZoneType.Super);
+
+        private void OnEnable()
+        {
+            spinController.OnSpinStarted   += HandleSpinStarted;
+            spinController.OnSpinCompleted += HandleSpinCompleted;
+            bank.OnBalanceChanged          += HandleBalanceChanged;   // bridge service -> UI hub
+            fsm.OnStateChanged             += HandleStateChanged;
+        }
+
+        private void OnDisable()
+        {
+            spinController.OnSpinStarted   -= HandleSpinStarted;
+            spinController.OnSpinCompleted -= HandleSpinCompleted;
+            bank.OnBalanceChanged          -= HandleBalanceChanged;
+            fsm.OnStateChanged             -= HandleStateChanged;
+        }
+
+        private void Start()
+        {
+            ApplyCurrentZone();                     // initial wheel + zone label
+            OnBalanceChanged?.Invoke(bank.Balance); // initial counter value (0)
+        }
+
+        private void HandleSpinStarted() => fsm.ChangeState(GameState.Spinning);
+
+        private void HandleSpinCompleted(WheelSlice slice)
+        {
+            fsm.ChangeState(GameState.Resolving);
+
+            if (slice.IsBomb)                       // BOMB -> lose everything
+            {
+                bank.ResetBank();
+                fsm.ChangeState(GameState.GameOver);
+                return;
+            }
+
+            // REWARD -> scale by zone type, then bank it
+            IZoneStrategy strategy = ZoneStrategyFactory.For(zones.CurrentType);
+            int amount = strategy.ScaleReward(slice.reward.baseAmount * slice.multiplier, zones.CurrentZone);
+            bank.Add(amount);
+
+            zones.Advance();                        // move to the next zone
+            ApplyCurrentZone();                     // new wheel + label
+            fsm.ChangeState(GameState.Idle);        // spinnable again
+        }
+
+        // Rebuild the run from scratch (after a cash-out or a game over).
+        public void Restart()
+        {
+            zones = new ZoneService();
+            bank.ResetBank();
+            ApplyCurrentZone();
+            OnBalanceChanged?.Invoke(bank.Balance);
+            fsm.ChangeState(GameState.Idle);
+        }
+
+        // Pick the wheel for the current zone type and apply it to both the view and the controller.
+        private void ApplyCurrentZone()
+        {
+            WheelData data = WheelForType(zones.CurrentType);
+            wheelView.SetWheel(data);
+            spinController.SetWheel(data);
+            OnZoneChanged?.Invoke(zones.CurrentZone, zones.CurrentType);
+        }
+
+        private WheelData WheelForType(ZoneType type)
+        {
+            switch (type)
+            {
+                case ZoneType.Super: return goldenWheel;
+                case ZoneType.Safe:  return silverWheel;
+                default:             return bronzeWheel;
+            }
+        }
+
+        // Forward service/machine events to the UI hub.
+        private void HandleBalanceChanged(int balance) => OnBalanceChanged?.Invoke(balance);
+        private void HandleStateChanged(GameState s)   => OnStateChanged?.Invoke(s);
+
+        // Cash out: take the bank and end the run. Only valid while Idle in a safe/super zone.
+        public void Leave()
+        {
+            if (!CanLeave) return;        // guard: mirrors CanLeave so a stray call can't cheat
+            int taken = bank.Balance;
+            OnCashedOut?.Invoke(taken);   // announce how much was collected
+            Restart();                    // pocket the reward, reset the run
+        }
+    }
+}

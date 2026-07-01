@@ -23,6 +23,13 @@ namespace VertigoCase.UI
         // Refresh whenever the object becomes active (e.g. a panel opens).
         private void OnEnable() => Apply();
 
+        // Switch to a different wheel at runtime (e.g. entering a safe/super zone) and redraw it.
+        public void SetWheel(WheelData data)
+        {
+            wheelData = data;
+            Apply();
+        }
+
         // Push the data's sprites onto the Image components. Null-guards keep the scene from
         // throwing if a reference is missing during setup.
         public void Apply()
