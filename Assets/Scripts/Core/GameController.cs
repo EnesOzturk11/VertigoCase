@@ -67,9 +67,8 @@ namespace VertigoCase.Core
         {
             fsm.ChangeState(GameState.Resolving);
 
-            if (slice.IsBomb)                       // BOMB -> lose everything
+            if (slice.IsBomb)                       // BOMB -> danger! keep the bank until the player decides
             {
-                bank.ResetBank();
                 fsm.ChangeState(GameState.GameOver);
                 return;
             }
@@ -124,6 +123,20 @@ namespace VertigoCase.Core
             int taken = bank.Balance;
             OnCashedOut?.Invoke(taken);   // announce how much was collected
             Restart();                    // pocket the reward, reset the run
+        }
+
+        // From GameOver: keep the collected rewards and continue on the same zone (revive).
+        public void Revive()
+        {
+            if (fsm.Current != GameState.GameOver) return;  // only meaningful after a bomb
+            fsm.ChangeState(GameState.Idle);                // bank untouched -> rewards kept
+        }
+
+        // From GameOver: accept the loss and start a fresh run (give up).
+        public void GiveUp()
+        {
+            if (fsm.Current != GameState.GameOver) return;
+            Restart();                                      // wipes the bank, back to zone 1
         }
     }
 }
