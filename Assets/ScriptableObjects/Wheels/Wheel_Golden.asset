@@ -16,4 +16,28 @@ MonoBehaviour:
   baseSprite: {fileID: 21300000, guid: 9f0765d4679434bfab147f60ea35f63d, type: 3}
   indicatorSprite: {fileID: 21300000, guid: b34cc095b0e714356b1149e2357058f6, type: 3}
   hasBomb: 0
-  slices: []
+  slices:
+  - reward: {fileID: 11400000, guid: 7d6665cdec53f449692e02d5abbeeddb, type: 2}
+    multiplier: 15
+    weight: 3
+  - reward: {fileID: 11400000, guid: b508b4ae828324ed89cee0aac3ba5e4e, type: 2}
+    multiplier: 10
+    weight: 3
+  - reward: {fileID: 11400000, guid: b07d9f5d2bc1646379c22af744f9b662, type: 2}
+    multiplier: 5
+    weight: 1
+  - reward: {fileID: 11400000, guid: 7d6665cdec53f449692e02d5abbeeddb, type: 2}
+    multiplier: 25
+    weight: 2
+  - reward: {fileID: 11400000, guid: b508b4ae828324ed89cee0aac3ba5e4e, type: 2}
+    multiplier: 20
+    weight: 2
+  - reward: {fileID: 11400000, guid: 7d6665cdec53f449692e02d5abbeeddb, type: 2}
+    multiplier: 40
+    weight: 1
+  - reward: {fileID: 11400000, guid: b07d9f5d2bc1646379c22af744f9b662, type: 2}
+    multiplier: 8
+    weight: 1
+  - reward: {fileID: 11400000, guid: b508b4ae828324ed89cee0aac3ba5e4e, type: 2}
+    multiplier: 30
+    weight: 1
