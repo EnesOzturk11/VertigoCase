@@ -34,9 +34,10 @@ namespace VertigoCase.UI
             if (game == null || panelRoot == null) return;
 
             game.OnStateChanged += HandleStateChanged;
-            giveUpButton.onClick.AddListener(HandleGiveUp);          // bind in code, not in the Inspector
-            reviveGoldButton.onClick.AddListener(HandleReviveWithGold);
-            reviveVideoButton.onClick.AddListener(HandleReviveWithVideo);
+            // Bind each button if it exists, so a not-yet-assigned reference can't break show/hide.
+            if (giveUpButton != null)      giveUpButton.onClick.AddListener(HandleGiveUp);
+            if (reviveGoldButton != null)  reviveGoldButton.onClick.AddListener(HandleReviveWithGold);
+            if (reviveVideoButton != null) reviveVideoButton.onClick.AddListener(HandleReviveWithVideo);
             Refresh(game.State);                                     // start hidden (Idle at launch)
         }
 
@@ -45,9 +46,9 @@ namespace VertigoCase.UI
             if (game == null || panelRoot == null) return;
 
             game.OnStateChanged -= HandleStateChanged;
-            giveUpButton.onClick.RemoveListener(HandleGiveUp);
-            reviveGoldButton.onClick.RemoveListener(HandleReviveWithGold);
-            reviveVideoButton.onClick.RemoveListener(HandleReviveWithVideo);
+            if (giveUpButton != null)      giveUpButton.onClick.RemoveListener(HandleGiveUp);
+            if (reviveGoldButton != null)  reviveGoldButton.onClick.RemoveListener(HandleReviveWithGold);
+            if (reviveVideoButton != null) reviveVideoButton.onClick.RemoveListener(HandleReviveWithVideo);
         }
 
         private void HandleStateChanged(GameState state) => Refresh(state);
