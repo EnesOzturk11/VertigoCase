@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using VertigoCase.Data;
 using VertigoCase.Economy;
@@ -34,8 +35,10 @@ namespace VertigoCase.Core
         public event Action<int, ZoneType> OnZoneChanged;
         public event Action<GameState> OnStateChanged;
         public event Action<int> OnCashedOut;   // amount taken when the player leaves (UI can celebrate)
+        public event Action<IReadOnlyDictionary<RewardType, int>> OnInventoryChanged; // per-type inventory for the inventory UI
 
         public GameState State => fsm.Current;
+        public IReadOnlyDictionary<RewardType, int> Inventory => bank.Amounts; // read-only, for the inventory panel to show
         public bool CanLeave => fsm.Current == GameState.Idle &&
                                 (zones.CurrentType == ZoneType.Safe || zones.CurrentType == ZoneType.Super);
 
@@ -43,7 +46,7 @@ namespace VertigoCase.Core
         {
             spinController.OnSpinStarted   += HandleSpinStarted;
             spinController.OnSpinCompleted += HandleSpinCompleted;
-            bank.OnBalanceChanged          += HandleBalanceChanged;   // bridge service -> UI hub
+            bank.OnChanged                 += HandleBankChanged;      // bridge service -> UI hub
             fsm.OnStateChanged             += HandleStateChanged;
         }
 
@@ -51,14 +54,14 @@ namespace VertigoCase.Core
         {
             spinController.OnSpinStarted   -= HandleSpinStarted;
             spinController.OnSpinCompleted -= HandleSpinCompleted;
-            bank.OnBalanceChanged          -= HandleBalanceChanged;
+            bank.OnChanged                 -= HandleBankChanged;
             fsm.OnStateChanged             -= HandleStateChanged;
         }
 
         private void Start()
         {
             ApplyCurrentZone();                     // initial wheel + zone label
-            OnBalanceChanged?.Invoke(bank.Balance); // initial counter value (0)
+            HandleBankChanged();                    // initial counter + inventory (empty)
         }
 
         private void HandleSpinStarted() => fsm.ChangeState(GameState.Spinning);
@@ -76,7 +79,7 @@ namespace VertigoCase.Core
             // REWARD -> scale by zone type, then bank it
             IZoneStrategy strategy = ZoneStrategyFactory.For(zones.CurrentType);
             int amount = strategy.ScaleReward(slice.reward.baseAmount * slice.multiplier, zones.CurrentZone);
-            bank.Add(amount);
+            bank.Add(slice.reward.type, amount);    // bank it under its reward type
 
             zones.Advance();                        // move to the next zone
             ApplyCurrentZone();                     // new wheel + label
@@ -87,9 +90,9 @@ namespace VertigoCase.Core
         public void Restart()
         {
             zones = new ZoneService();
-            bank.ResetBank();
+            bank.Clear();
             ApplyCurrentZone();
-            OnBalanceChanged?.Invoke(bank.Balance);
+            HandleBankChanged();
             fsm.ChangeState(GameState.Idle);
         }
 
@@ -113,14 +116,18 @@ namespace VertigoCase.Core
         }
 
         // Forward service/machine events to the UI hub.
-        private void HandleBalanceChanged(int balance) => OnBalanceChanged?.Invoke(balance);
-        private void HandleStateChanged(GameState s)   => OnStateChanged?.Invoke(s);
+        private void HandleBankChanged()
+        {
+            OnBalanceChanged?.Invoke(bank.Total);     // combined total for the HUD counter
+            OnInventoryChanged?.Invoke(bank.Amounts); // per-type breakdown for the inventory panel
+        }
+        private void HandleStateChanged(GameState s) => OnStateChanged?.Invoke(s);
 
         // Cash out: take the bank and end the run. Only valid while Idle in a safe/super zone.
         public void Leave()
         {
             if (!CanLeave) return;        // guard: mirrors CanLeave so a stray call can't cheat
-            int taken = bank.Balance;
+            int taken = bank.Total;
             OnCashedOut?.Invoke(taken);   // announce how much was collected
             Restart();                    // pocket the reward, reset the run
         }
