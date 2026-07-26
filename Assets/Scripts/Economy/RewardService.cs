@@ -10,7 +10,7 @@ namespace VertigoCase.Economy
     /// bomb (via GiveUp) calls Clear(). Pure C# (no MonoBehaviour) so it can be unit-tested without a
     /// scene. UI never stores the totals — it reads Amounts/Total and reacts to OnChanged.
     /// </summary>
-    public class RewardService
+    public sealed class RewardService : IRewardWallet
     {
         // Per-type accumulated amount. Private so only Add()/Clear() can mutate it.
         private readonly Dictionary<RewardType, int> _amounts = new Dictionary<RewardType, int>();

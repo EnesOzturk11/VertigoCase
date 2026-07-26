@@ -1,4 +1,5 @@
 using UnityEngine;
+using VertigoCase.Config;
 
 namespace VertigoCase.Data
 {
@@ -21,6 +22,6 @@ namespace VertigoCase.Data
         public Sprite icon;
 
         [Tooltip("Base amount. Will be scaled by zone later.")]
-        public int baseAmount = 100;
+        public int baseAmount = GameConstants.Rewards.DefaultBaseAmount;
     }
 }

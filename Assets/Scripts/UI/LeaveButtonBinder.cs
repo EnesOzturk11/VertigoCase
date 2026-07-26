@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using VertigoCase.Core;
@@ -5,42 +6,50 @@ using VertigoCase.Core;
 namespace VertigoCase.UI
 {
     /// <summary>
-    /// Wires the Leave (cash-out) button to the GameController from code, and keeps it enabled only
-    /// while leaving is allowed (Idle + safe/super zone). A thin View: it forwards the click and
-    /// reflects state; it holds no cash-out logic itself (that lives in GameController.Leave).
+    /// Wires the Leave (cash-out) button through <see cref="ILeavePort"/> and keeps it enabled only
+    /// while leaving is allowed. A thin View: it forwards the click and reflects state.
     /// </summary>
     [RequireComponent(typeof(Button))]
     public class LeaveButtonBinder : MonoBehaviour
     {
         [SerializeField] private Button leaveButton;
-        [SerializeField] private GameController game;
+        [SerializeField] private MonoBehaviour game;
+
+        private ILeavePort gamePort;
 
         private void OnValidate()
         {
             if (leaveButton == null) leaveButton = GetComponent<Button>();
         }
 
+        private void Awake()
+        {
+            gamePort = game as ILeavePort ??
+                       throw new InvalidOperationException(
+                           "LeaveButtonBinder requires a component implementing ILeavePort.");
+        }
+
         private void OnEnable()
         {
-            if (leaveButton == null || game == null) return;
+            if (leaveButton == null) return;
 
-            leaveButton.onClick.AddListener(game.Leave);
-            game.OnStateChanged += HandleStateChanged;   // state changed -> refresh the button
-            game.OnZoneChanged  += HandleZoneChanged;    // zone changed (type may change) -> refresh
+            leaveButton.onClick.AddListener(gamePort.Leave);
+            gamePort.OnStateChanged += HandleStateChanged;
+            gamePort.OnZoneChanged += HandleZoneChanged;
             Refresh();
         }
 
         private void OnDisable()
         {
-            if (leaveButton == null || game == null) return;
+            if (leaveButton == null || gamePort == null) return;
 
-            leaveButton.onClick.RemoveListener(game.Leave);
-            game.OnStateChanged -= HandleStateChanged;   // named methods so -= actually unsubscribes
-            game.OnZoneChanged  -= HandleZoneChanged;
+            leaveButton.onClick.RemoveListener(gamePort.Leave);
+            gamePort.OnStateChanged -= HandleStateChanged;
+            gamePort.OnZoneChanged -= HandleZoneChanged;
         }
 
         private void HandleStateChanged(GameState state)        => Refresh();
         private void HandleZoneChanged(int zone, ZoneType type) => Refresh();
-        private void Refresh() => leaveButton.interactable = game.CanLeave;
+        private void Refresh() => leaveButton.interactable = gamePort.CanLeave;
     }
 }

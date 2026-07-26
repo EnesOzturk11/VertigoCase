@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using TMPro;
 using VertigoCase.Core;
@@ -5,16 +6,30 @@ using VertigoCase.Core;
 namespace VertigoCase.UI
 {
     /// <summary>
-    /// Shows the bank balance. A pure View: it subscribes to GameController's balance event and writes
-    /// the number to a label. No game logic, no polling — it only reacts when the balance changes.
+    /// Shows the bank balance. A pure View: it subscribes through <see cref="IBalancePort"/> and
+    /// writes the number to a label. No game logic or polling.
     /// </summary>
     public class RewardCounterView : MonoBehaviour
     {
-        [SerializeField] private GameController game;
+        [SerializeField] private MonoBehaviour game;
         [SerializeField] private TextMeshProUGUI amountText;   // ui_text_reward_value
 
-        private void OnEnable()  => game.OnBalanceChanged += HandleBalance;
-        private void OnDisable() => game.OnBalanceChanged -= HandleBalance;
+        private IBalancePort gamePort;
+
+        private void Awake()
+        {
+            gamePort = game as IBalancePort ??
+                       throw new InvalidOperationException(
+                           "RewardCounterView requires a component implementing IBalancePort.");
+        }
+
+        private void OnEnable() => gamePort.OnBalanceChanged += HandleBalance;
+
+        private void OnDisable()
+        {
+            if (gamePort != null)
+                gamePort.OnBalanceChanged -= HandleBalance;
+        }
 
         private void HandleBalance(int balance) => amountText.text = balance.ToString();
     }
