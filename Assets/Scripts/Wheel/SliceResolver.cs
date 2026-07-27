@@ -1,4 +1,5 @@
-using UnityEngine;          // Mathf + UnityEngine.Random
+using UnityEngine;
+using VertigoCase.Config;
 using VertigoCase.Data;
 
 namespace VertigoCase.Wheel
@@ -13,17 +14,17 @@ namespace VertigoCase.Wheel
         // Returns the index of the chosen slice. A higher slice weight means a higher chance.
         public static int Resolve(WheelData wheel)
         {
-            // Sum every weight (clamped to at least 1, so a zero/negative weight can't break the math).
+            // Clamp weights to the shared minimum so invalid content cannot break the math.
             int total = 0;
             for (int i = 0; i < wheel.slices.Count; i++)
-                total += Mathf.Max(1, wheel.slices[i].weight);
+                total += Mathf.Max(GameConstants.Wheel.MinimumSliceWeight, wheel.slices[i].weight);
 
             // Pick a point in [0, total) and walk the slices until that point falls inside one's window.
             int roll = Random.Range(0, total);
             int acc = 0;
             for (int i = 0; i < wheel.slices.Count; i++)
             {
-                acc += Mathf.Max(1, wheel.slices[i].weight);
+                acc += Mathf.Max(GameConstants.Wheel.MinimumSliceWeight, wheel.slices[i].weight);
                 if (roll < acc) return i;
             }
 

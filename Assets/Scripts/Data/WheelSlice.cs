@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using VertigoCase.Config;
 
 namespace VertigoCase.Data
 {
@@ -15,10 +16,10 @@ namespace VertigoCase.Data
         public RewardData reward;
 
         [Tooltip("Amount multiplier applied to the reward's base amount.")]
-        public int multiplier = 1;
+        public int multiplier = GameConstants.Wheel.DefaultSliceMultiplier;
 
         [Tooltip("Selection weight. Higher = comes up more often. Rare rewards / the bomb get a lower weight.")]
-        public int weight = 1;
+        public int weight = GameConstants.Wheel.DefaultSliceWeight;
 
         // Derived from the reward type, so there is a single source of truth (no extra bool to keep in sync).
         public bool IsBomb => reward != null && reward.type == RewardType.Bomb;

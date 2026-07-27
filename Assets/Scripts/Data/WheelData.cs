@@ -20,10 +20,17 @@ namespace VertigoCase.Data
         [Tooltip("Pointer/indicator sprite")]
         public Sprite indicatorSprite;
 
-        [Tooltip("Whether this wheel contains a bomb (false for Safe/Super wheels)")]
-        public bool hasBomb = true;
+        [Header("Labels")]
+        [Tooltip("Headline displayed above this wheel, e.g. 'GOLDEN SPIN'")]
+        public string titleLabel;
 
-        [Tooltip("The slices placed around the wheel (8 expected)")]
+        [Tooltip("Reward callout displayed below this wheel, e.g. 'Up To x10 Rewards'")]
+        public string rewardCalloutLabel;
+
+        [Tooltip("Shared color used by the wheel headline and reward callout")]
+        public Color labelColor = new Color(1f, 0.82f, 0f, 1f);
+
+        [Tooltip("The slices placed around the wheel")]
         public List<WheelSlice> slices = new List<WheelSlice>();
     }
 }

@@ -15,7 +15,9 @@ MonoBehaviour:
   wheelName: Bronze
   baseSprite: {fileID: 21300000, guid: f6650945e95e74371be89fc70f73ab71, type: 3}
   indicatorSprite: {fileID: 21300000, guid: 46a674cc02f7a440f92fcde67a4932b8, type: 3}
-  hasBomb: 1
+  titleLabel: BRONZE SPIN
+  rewardCalloutLabel: Up To x3 Rewards
+  labelColor: {r: 1, g: 0.56, b: 0.12, a: 1}
   slices:
   - reward: {fileID: 11400000, guid: a8bcc20499e3c4949a583a23aabaaf94, type: 2}
     multiplier: 0
@@ -32,7 +34,7 @@ MonoBehaviour:
   - reward: {fileID: 11400000, guid: 7d6665cdec53f449692e02d5abbeeddb, type: 2}
     multiplier: 10
     weight: 5
-  - reward: {fileID: 11400000, guid: 7d6665cdec53f449692e02d5abbeeddb, type: 2}
+  - reward: {fileID: 11400000, guid: d13a2274454b4a34a73a9fe1e8524690, type: 2}
     multiplier: 7
     weight: 4
   - reward: {fileID: 11400000, guid: b508b4ae828324ed89cee0aac3ba5e4e, type: 2}

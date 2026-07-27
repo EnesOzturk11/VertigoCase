@@ -15,7 +15,9 @@ MonoBehaviour:
   wheelName: Silver
   baseSprite: {fileID: 21300000, guid: c8fb2677a79c54903832274636a32a08, type: 3}
   indicatorSprite: {fileID: 21300000, guid: 9dcd85283518343a0b0d345321a4d483, type: 3}
-  hasBomb: 0
+  titleLabel: SILVER SPIN
+  rewardCalloutLabel: Up To x5 Rewards
+  labelColor: {r: 0.9, g: 0.94, b: 1, a: 1}
   slices:
   - reward: {fileID: 11400000, guid: 7d6665cdec53f449692e02d5abbeeddb, type: 2}
     multiplier: 5
@@ -35,7 +37,7 @@ MonoBehaviour:
   - reward: {fileID: 11400000, guid: 7d6665cdec53f449692e02d5abbeeddb, type: 2}
     multiplier: 10
     weight: 2
-  - reward: {fileID: 11400000, guid: b07d9f5d2bc1646379c22af744f9b662, type: 2}
+  - reward: {fileID: 11400000, guid: d13a2274454b4a34a73a9fe1e8524690, type: 2}
     multiplier: 3
     weight: 1
   - reward: {fileID: 11400000, guid: b508b4ae828324ed89cee0aac3ba5e4e, type: 2}
