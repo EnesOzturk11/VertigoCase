@@ -331,9 +331,7 @@ namespace VertigoCase.UI
             indicatorRect.sizeDelta = new Vector2(
                 GameConstants.ZoneBar.IndicatorWidth,
                 GameConstants.ZoneBar.IndicatorHeight);
-            // The wheel pointer is intentionally widened for this smaller use: its native,
-            // tall aspect ratio looks needle-thin when placed on the zone marker.
-            indicator.preserveAspect = false;
+            indicator.preserveAspect = true;
 
             GameObject itemsObject = new GameObject(
                 "ZoneBar_Items",

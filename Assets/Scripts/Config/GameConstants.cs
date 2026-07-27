@@ -72,7 +72,7 @@ namespace VertigoCase.Config
             public const float CurrentMarkerWidthPadding = 12f;
             public const float FrameShadowOffset = 2f;
             public const float IndicatorWidth = 42f;
-            public const float IndicatorHeight = 44f;
+            public const float IndicatorHeight = 58f;
             public const float IndicatorTopOffset = 8f;
         }
 
