@@ -24,15 +24,14 @@ namespace VertigoCase.UI
         // Called by WheelView for each slice. The view is dumb: it just shows what the data says.
         public void Bind(WheelSlice slice)
         {
-            if (slice == null || slice.reward == null) return;
+            if (slice == null || (!slice.IsBomb && slice.reward == null)) return;
 
             bool isBomb = slice.IsBomb;
             ConfigureVisuals(isBomb);
-            iconImage.sprite = slice.reward.icon;
-            float visibleIconHeight = NormalizeIconSize(slice.reward.icon);
+            iconImage.sprite = slice.Icon;
+            float visibleIconHeight = NormalizeIconSize(slice.Icon);
 
-            // Final amount = reward base scaled by the slice multiplier.
-            int amount = slice.reward.baseAmount * slice.multiplier;
+            int amount = isBomb ? 0 : slice.reward.baseAmount * slice.multiplier;
 
             // The bomb shows only its icon. Rewards use the reference style: x10, x300, x1.5K.
             amountText.text = isBomb

@@ -15,11 +15,13 @@ namespace VertigoCase.Core
         private int occurrenceInterval = GameConstants.Zones.DefaultOccurrenceInterval;
         [SerializeField] private WheelData wheel;
         [SerializeField] private bool canLeave;
+        [SerializeField, Min(0)] private int requiredBombCount;
 
         public ZoneType Type => type;
         public int OccurrenceInterval => occurrenceInterval;
         public WheelData Wheel => wheel;
         public bool CanLeave => canLeave;
+        public int RequiredBombCount => requiredBombCount;
 
         public bool AppliesTo(int zone) =>
             zone >= GameConstants.Zones.FirstZone &&

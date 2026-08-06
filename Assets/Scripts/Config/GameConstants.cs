@@ -49,7 +49,6 @@ namespace VertigoCase.Config
         public static class Rewards
         {
             public const int DefaultBaseAmount = 100;
-            public const int DefaultReviveGoldCost = 25;
         }
 
         public static class Zones
@@ -68,10 +67,6 @@ namespace VertigoCase.Config
             public const float CurrentMarkerHeight = 120f;
             public const float TransitionSeconds = 0.35f;
             public const float CurrentMarkerWidthPadding = 12f;
-            public const float FrameShadowOffset = 2f;
-            public const float IndicatorWidth = 42f;
-            public const float IndicatorHeight = 58f;
-            public const float IndicatorTopOffset = 8f;
             public const float MarkerPulseScale = 0.1f;
             public const float MarkerPulseSeconds = 0.2f;
             public const int MarkerPulseVibrato = 5;

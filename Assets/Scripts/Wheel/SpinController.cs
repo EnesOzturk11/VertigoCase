@@ -28,6 +28,9 @@ namespace VertigoCase.Wheel
 
         public bool IsSpinning { get; private set; }       // state guard: blocks a second spin mid-animation
 
+        private Tween spinTween;
+        private WheelSlice pendingResult;
+
         // Observer: logic finishes, listeners (UI / VFX / economy) react. The view does not know the spin math.
         public event Action OnSpinStarted;
         public event Action<WheelSlice> OnSpinCompleted;
@@ -41,10 +44,8 @@ namespace VertigoCase.Wheel
             if (IsSpinning || wheelData == null || wheelRoot == null) return; // guard: don't start while spinning
             if (wheelData.slices.Count == 0) return;
 
-            IsSpinning = true;
-            OnSpinStarted?.Invoke();
-
             int index = SliceResolver.Resolve(wheelData);  // decide the winner FIRST, then animate to it
+            pendingResult = wheelData.slices[index];
             float step = GameConstants.Wheel.FullRotationDegrees / wheelData.slices.Count;
 
             // WheelView places slice 0 at the top and increases index CLOCKWISE, while Unity's +Z is
@@ -54,20 +55,49 @@ namespace VertigoCase.Wheel
             float targetZ =
                 extraSpins * GameConstants.Wheel.FullRotationDegrees + index * step + angleOffset;
 
-            wheelRoot.DOLocalRotate(new Vector3(0f, 0f, targetZ), duration, RotateMode.FastBeyond360)
-                     .SetEase(Ease.OutCubic)                // decelerate smoothly toward the end
-                     .OnComplete(() =>
-                     {
-                         IsSpinning = false;
-                         WheelSlice result = wheelData.slices[index];
+            IsSpinning = true;
+            spinTween = wheelRoot
+                .DOLocalRotate(
+                    new Vector3(0f, 0f, targetZ),
+                    duration,
+                    RotateMode.FastBeyond360)
+                .SetEase(Ease.OutCubic)
+                .OnComplete(HandleSpinCompleted);
 
-                         if (logResult)
-                             GameLog.Info(
-                                 $"[SpinController] Landed on '{(result.reward != null ? result.reward.name : "null")}' (bomb={result.IsBomb})",
-                                 this);
+            OnSpinStarted?.Invoke();
+        }
 
-                         OnSpinCompleted?.Invoke(result);
-                     });
+        private void HandleSpinCompleted()
+        {
+            WheelSlice result = pendingResult;
+            pendingResult = null;
+            spinTween = null;
+            IsSpinning = false;
+
+            if (result == null)
+                return;
+
+            if (logResult)
+                GameLog.Info(
+                    $"[SpinController] Landed on '{(result.IsBomb ? "Bomb" : result.reward != null ? result.reward.name : "null")}' (bomb={result.IsBomb})",
+                    this);
+
+            OnSpinCompleted?.Invoke(result);
+        }
+
+        private void OnDisable() => CancelActiveSpin();
+
+        private void OnDestroy() => CancelActiveSpin();
+
+        private void CancelActiveSpin()
+        {
+            Tween tween = spinTween;
+            spinTween = null;
+            pendingResult = null;
+            IsSpinning = false;
+
+            if (tween != null && tween.IsActive())
+                tween.Kill(false);
         }
     }
 }

@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,21 +9,18 @@ namespace VertigoCase.UI
         public RectTransform ItemsRoot { get; }
         public RectTransform CurrentMarker { get; }
         public Image CurrentMarkerImage { get; }
-        public Image[] CellImages { get; }
-        public TextMeshProUGUI[] Labels { get; }
+        public ZoneProgressBarCellView[] Cells { get; }
 
         public ZoneProgressBarElements(
             RectTransform itemsRoot,
             RectTransform currentMarker,
             Image currentMarkerImage,
-            Image[] cellImages,
-            TextMeshProUGUI[] labels)
+            ZoneProgressBarCellView[] cells)
         {
             ItemsRoot = itemsRoot;
             CurrentMarker = currentMarker;
             CurrentMarkerImage = currentMarkerImage;
-            CellImages = cellImages;
-            Labels = labels;
+            Cells = cells;
         }
     }
 }

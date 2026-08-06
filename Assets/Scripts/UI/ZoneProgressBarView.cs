@@ -15,11 +15,7 @@ namespace VertigoCase.UI
         [Header("Source")]
         [SerializeField] private MonoBehaviour game;
         [SerializeField] private ZoneProgressBarTheme theme;
-
-        [Header("Marker Asset")]
-        [SerializeField] private Sprite currentMarkerSprite;
-        [SerializeField] private Sprite frameSprite;
-        [SerializeField] private Sprite indicatorSprite;
+        [SerializeField] private ZoneProgressBarWidget widgetPrefab;
 
         [Header("Layout")]
         [SerializeField, Min(5)] private int visibleZoneCount = GameConstants.ZoneBar.VisibleZoneCount;
@@ -57,13 +53,8 @@ namespace VertigoCase.UI
                 barHeight,
                 currentMarkerHeight);
 
-            ZoneProgressBarElements elements = ZoneProgressBarFactory.Build(
-                (RectTransform)transform,
-                layout,
-                theme,
-                currentMarkerSprite,
-                frameSprite,
-                indicatorSprite);
+            ZoneProgressBarWidget widget = Instantiate(widgetPrefab, transform, false);
+            ZoneProgressBarElements elements = widget.Initialize(layout);
 
             barRenderer = new ZoneProgressBarRenderer(elements, layout, theme);
             animator = new ZoneProgressBarAnimator(elements);
@@ -142,12 +133,8 @@ namespace VertigoCase.UI
         {
             if (theme == null)
                 throw new InvalidOperationException("Zone progress bar theme is missing.");
-            if (currentMarkerSprite == null)
-                throw new InvalidOperationException("Zone bar rounded panel sprite is missing.");
-            if (frameSprite == null)
-                throw new InvalidOperationException("Zone bar frame sprite is missing.");
-            if (indicatorSprite == null)
-                throw new InvalidOperationException("Zone bar indicator sprite is missing.");
+            if (widgetPrefab == null)
+                throw new InvalidOperationException("Zone progress bar widget prefab is missing.");
         }
     }
 }

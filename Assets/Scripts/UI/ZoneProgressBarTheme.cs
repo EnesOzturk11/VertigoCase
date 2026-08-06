@@ -28,20 +28,9 @@ namespace VertigoCase.UI
     [CreateAssetMenu(fileName = "ZoneProgressBarTheme", menuName = "Vertigo/UI/Zone Progress Bar Theme")]
     public sealed class ZoneProgressBarTheme : ScriptableObject
     {
-        [Header("Shared colors")]
-        [SerializeField] private Color barTint = Color.black;
-        [SerializeField] private Color cellTint = Color.clear;
-        [SerializeField] private Color frameShadowColor = Color.black;
-        [SerializeField] private Color frameHighlightColor = Color.white;
-
         [Header("Zone styles")]
         [SerializeField] private List<ZoneProgressBarStyle> styles =
             new List<ZoneProgressBarStyle>();
-
-        public Color BarTint => barTint;
-        public Color CellTint => cellTint;
-        public Color FrameShadowColor => frameShadowColor;
-        public Color FrameHighlightColor => frameHighlightColor;
 
         public ZoneProgressBarStyle StyleFor(ZoneType type)
         {

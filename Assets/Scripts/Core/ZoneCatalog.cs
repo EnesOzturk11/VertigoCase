@@ -41,6 +41,7 @@ namespace VertigoCase.Core
                     throw new InvalidOperationException($"Zone policy at index {i} is missing.");
                 if (policy.Wheel == null)
                     throw new InvalidOperationException($"{policy.name} does not reference a wheel.");
+                ValidateWheel(policy);
                 if (policy.OccurrenceInterval < GameConstants.Zones.MinimumOccurrenceInterval)
                     throw new InvalidOperationException($"{policy.name} has an invalid occurrence interval.");
                 if (!types.Add(policy.Type))
@@ -56,6 +57,52 @@ namespace VertigoCase.Core
             if (!hasFallback)
                 throw new InvalidOperationException(
                     $"ZoneCatalog requires a policy with interval {GameConstants.Zones.DefaultOccurrenceInterval}.");
+        }
+
+        private static void ValidateWheel(ZonePolicy policy)
+        {
+            WheelData wheel = policy.Wheel;
+            if (wheel.slices == null || wheel.slices.Count == 0)
+                throw new InvalidOperationException($"{wheel.name} must contain at least one slice.");
+
+            int bombCount = 0;
+            for (int i = 0; i < wheel.slices.Count; i++)
+            {
+                WheelSlice slice = wheel.slices[i];
+                if (slice == null)
+                    throw new InvalidOperationException($"{wheel.name} has a missing slice at index {i}.");
+                if (slice.weight < GameConstants.Wheel.MinimumSliceWeight)
+                    throw new InvalidOperationException(
+                        $"{wheel.name} slice {i} has an invalid selection weight.");
+
+                if (slice.IsBomb)
+                {
+                    bombCount++;
+                    if (slice.reward != null)
+                        throw new InvalidOperationException(
+                            $"{wheel.name} bomb slice {i} cannot contain a collectible reward.");
+                    if (slice.hazardIcon == null)
+                        throw new InvalidOperationException(
+                            $"{wheel.name} bomb slice {i} does not have a hazard icon.");
+
+                    continue;
+                }
+
+                if (slice.reward == null)
+                    throw new InvalidOperationException(
+                        $"{wheel.name} reward slice {i} does not reference a reward.");
+                if (slice.reward.icon == null)
+                    throw new InvalidOperationException(
+                        $"{wheel.name} reward slice {i} does not have an icon.");
+                if (slice.multiplier < GameConstants.Wheel.DefaultSliceMultiplier)
+                    throw new InvalidOperationException(
+                        $"{wheel.name} reward slice {i} has an invalid multiplier.");
+            }
+
+            if (bombCount != policy.RequiredBombCount)
+                throw new InvalidOperationException(
+                    $"{policy.name} requires exactly {policy.RequiredBombCount} bomb slice(s), " +
+                    $"but {wheel.name} contains {bombCount}.");
         }
 
         private ZonePolicy PolicyFor(ZoneType type)

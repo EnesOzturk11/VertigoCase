@@ -16,11 +16,10 @@ namespace VertigoCase.Core
         private readonly IGameStateMachine stateMachine;
         private readonly IZoneStrategyResolver strategyResolver;
 
-        public event Action<int> OnBalanceChanged;
         public event Action<IReadOnlyDictionary<RewardType, int>> OnInventoryChanged;
         public event Action<int, ZoneType> OnZoneChanged;
         public event Action<GameState> OnStateChanged;
-        public event Action<int> OnCashedOut;
+        public event Action<IReadOnlyDictionary<RewardType, int>> OnCashedOut;
 
         public GameState State => stateMachine.Current;
         public IReadOnlyDictionary<RewardType, int> Inventory => rewards.Amounts;
@@ -66,6 +65,11 @@ namespace VertigoCase.Core
 
             if (slice.IsBomb)
             {
+                // A bomb ends the run immediately. The loss is a domain/economy rule, not a UI
+                // choice deferred until the player presses Give Up.
+                rewards.Clear();
+                zones.Reset();
+                PublishZone();
                 stateMachine.ChangeState(GameState.GameOver);
                 return;
             }
@@ -93,14 +97,8 @@ namespace VertigoCase.Core
         {
             if (!CanLeave) return;
 
-            OnCashedOut?.Invoke(rewards.Total);
+            OnCashedOut?.Invoke(new Dictionary<RewardType, int>(rewards.Amounts));
             Restart();
-        }
-
-        public void Revive()
-        {
-            if (State != GameState.GameOver) return;
-            stateMachine.ChangeState(GameState.Idle);
         }
 
         public void GiveUp()
@@ -111,7 +109,6 @@ namespace VertigoCase.Core
 
         private void PublishRewards()
         {
-            OnBalanceChanged?.Invoke(rewards.Total);
             OnInventoryChanged?.Invoke(rewards.Amounts);
         }
 

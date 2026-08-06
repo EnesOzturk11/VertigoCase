@@ -8,7 +8,6 @@ namespace VertigoCase.Core
     {
         GameState State { get; }
         event Action<GameState> OnStateChanged;
-        void Revive();
         void GiveUp();
     }
 
@@ -16,11 +15,6 @@ namespace VertigoCase.Core
     {
         IReadOnlyDictionary<RewardType, int> Inventory { get; }
         event Action<IReadOnlyDictionary<RewardType, int>> OnInventoryChanged;
-    }
-
-    public interface IBalancePort
-    {
-        event Action<int> OnBalanceChanged;
     }
 
     public interface IZonePort

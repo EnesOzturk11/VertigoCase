@@ -1604,7 +1604,7 @@ MonoBehaviour:
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 2400, y: 1080}
-  m_ScreenMatchMode: 0
+  m_ScreenMatchMode: 1
   m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
@@ -1671,10 +1671,6 @@ MonoBehaviour:
   game: {fileID: 571280376}
   panelRoot: {fileID: 29380831}
   giveUpButton: {fileID: 1247167968}
-  reviveGoldButton: {fileID: 2118698979}
-  reviveVideoButton: {fileID: 1870354142}
-  developerMode: 1
-  reviveGoldCost: 25
 --- !u!114 &1235294256
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2849,9 +2845,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   game: {fileID: 571280376}
   theme: {fileID: 11400000, guid: ed67e791a24e4c31bca5d3ff87b44853, type: 2}
-  currentMarkerSprite: {fileID: 21300000, guid: 2b7bf7c08cc4a42b0befdd066d997448, type: 3}
-  frameSprite: {fileID: 21300000, guid: 9050153e413594483873835ad286e4e8, type: 3}
-  indicatorSprite: {fileID: 21300000, guid: 9dcd85283518343a0b0d345321a4d483, type: 3}
+  widgetPrefab: {fileID: 7001, guid: 8df1bf4315ed43a58ee5bf9bdd6f7b8a, type: 3}
   visibleZoneCount: 13
   cellWidth: 84
   cellSpacing: 4
@@ -3008,6 +3002,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   game: {fileID: 571280376}
   amountText: {fileID: 1688779973}
+  rewardType: 0
 --- !u!1 &1810037966
 GameObject:
   m_ObjectHideFlags: 0
@@ -3252,7 +3247,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1870354141
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3572,7 +3567,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2118698978
 RectTransform:
   m_ObjectHideFlags: 0

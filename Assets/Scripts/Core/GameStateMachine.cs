@@ -18,7 +18,9 @@ namespace VertigoCase.Core
                     GameState.Resolving,
                     new HashSet<GameState> { GameState.Idle, GameState.GameOver }
                 },
-                { GameState.GameOver, new HashSet<GameState> { GameState.Idle } }
+                // GameOver is terminal for a run. Restart uses Reset(); no unguarded transition
+                // may bypass the bomb loss rule.
+                { GameState.GameOver, new HashSet<GameState>() }
             };
 
         // Current state. Read-only from outside; only validated transitions or Reset may write it.

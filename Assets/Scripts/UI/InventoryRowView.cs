@@ -26,8 +26,6 @@ namespace VertigoCase.UI
 
         public void Bind(RewardType type, Sprite icon, int amount, bool animate)
         {
-            if (type == RewardType.Bomb)
-                throw new ArgumentException("Bomb cannot be bound to an inventory row.", nameof(type));
             if (icon == null)
                 throw new ArgumentNullException(nameof(icon));
 

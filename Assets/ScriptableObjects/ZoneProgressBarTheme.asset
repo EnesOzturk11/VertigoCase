@@ -12,10 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3e1a9e413b44bd5ba304c225abf1544, type: 3}
   m_Name: ZoneProgressBarTheme
   m_EditorClassIdentifier:
-  barTint: {r: 0.01, g: 0.01, b: 0.014, a: 0.98}
-  cellTint: {r: 0, g: 0, b: 0, a: 0}
-  frameShadowColor: {r: 0.005, g: 0.005, b: 0.007, a: 1}
-  frameHighlightColor: {r: 1, g: 1, b: 1, a: 1}
   styles:
   - type: 0
     futureTextColor: {r: 0.96, g: 0.96, b: 0.96, a: 1}

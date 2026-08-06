@@ -246,8 +246,6 @@ namespace VertigoCase.UI
             {
                 if (entry == null)
                     throw new InvalidOperationException("Inventory icon entries cannot be null.");
-                if (entry.type == RewardType.Bomb)
-                    throw new InvalidOperationException("Bomb is a failure state, not an inventory reward.");
                 if (entry.icon == null)
                     throw new InvalidOperationException(
                         "Inventory icon is missing for " + entry.type + ".");
@@ -256,15 +254,7 @@ namespace VertigoCase.UI
                         "Inventory contains a duplicate icon mapping for " + entry.type + ".");
             }
 
-            RewardType[] collectibleTypes =
-            {
-                RewardType.Cash,
-                RewardType.Gold,
-                RewardType.Chest,
-                RewardType.Weapon
-            };
-
-            foreach (RewardType type in collectibleTypes)
+            foreach (RewardType type in Enum.GetValues(typeof(RewardType)))
             {
                 if (!configuredTypes.Contains(type))
                     throw new InvalidOperationException(

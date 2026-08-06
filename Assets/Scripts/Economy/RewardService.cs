@@ -7,29 +7,24 @@ namespace VertigoCase.Economy
     /// <summary>
     /// The "bank": the single source of truth for the rewards collected during a run, stored per type
     /// (Cash/Gold/Chest/Weapon) in a dictionary. A winning spin calls Add(type, amount); hitting the
-    /// bomb (via GiveUp) calls Clear(). Pure C# (no MonoBehaviour) so it can be unit-tested without a
-    /// scene. UI never stores the totals — it reads Amounts/Total and reacts to OnChanged.
+    /// bomb calls Clear(). Different reward types are never collapsed into a meaningless scalar.
     /// </summary>
     public sealed class RewardService : IRewardWallet
     {
-        // Per-type accumulated amount. Private so only Add()/Clear() can mutate it.
+        // Per-type accumulated amount. Private so only wallet operations can mutate it.
         private readonly Dictionary<RewardType, int> _amounts = new Dictionary<RewardType, int>();
 
         // Read-only view for the inventory UI (iterate type -> count).
         public IReadOnlyDictionary<RewardType, int> Amounts => _amounts;
 
-        // Combined value across every type (used by the main HUD counter).
-        public int Total { get; private set; }
-
-        // Fires whenever the inventory changes; listeners re-read Amounts/Total.
+        // Fires whenever the inventory changes; listeners re-read Amounts.
         public event Action OnChanged;
 
         public void Add(RewardType type, int amount)
         {
             if (amount <= 0) return;                  // a zero/negative reward must not corrupt the bank
             _amounts.TryGetValue(type, out int current);
-            _amounts[type] = current + amount;        // accumulate this type
-            Total += amount;
+            _amounts[type] = checked(current + amount);
             OnChanged?.Invoke();
         }
 
@@ -40,11 +35,35 @@ namespace VertigoCase.Economy
             return value;
         }
 
+        public bool CanAfford(RewardType type, int amount)
+        {
+            if (amount < 0)
+                throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount cannot be negative.");
+
+            return AmountOf(type) >= amount;
+        }
+
+        public bool Spend(RewardType type, int amount)
+        {
+            if (amount <= 0)
+                throw new ArgumentOutOfRangeException(nameof(amount), amount, "Spend amount must be positive.");
+            if (!CanAfford(type, amount))
+                return false;
+
+            int remaining = AmountOf(type) - amount;
+            if (remaining == 0)
+                _amounts.Remove(type);
+            else
+                _amounts[type] = remaining;
+
+            OnChanged?.Invoke();
+            return true;
+        }
+
         public void Clear()
         {
             if (_amounts.Count == 0) return;          // already empty -> no change, no event
             _amounts.Clear();
-            Total = 0;
             OnChanged?.Invoke();
         }
     }

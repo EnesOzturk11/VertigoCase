@@ -13,7 +13,6 @@ namespace VertigoCase.Core
         MonoBehaviour,
         IGameOverPort,
         IInventoryPort,
-        IBalancePort,
         IZonePort,
         ILeavePort
     {
@@ -21,10 +20,9 @@ namespace VertigoCase.Core
         private IWheelCoordinator wheelCoordinator;
 
         // UI observes this facade and remains independent from the domain services.
-        public event Action<int> OnBalanceChanged;
         public event Action<int, ZoneType> OnZoneChanged;
         public event Action<GameState> OnStateChanged;
-        public event Action<int> OnCashedOut;
+        public event Action<IReadOnlyDictionary<RewardType, int>> OnCashedOut;
         public event Action<IReadOnlyDictionary<RewardType, int>> OnInventoryChanged;
 
         public GameState State => session.State;
@@ -47,7 +45,6 @@ namespace VertigoCase.Core
 
             wheelCoordinator.Connect(session);
 
-            session.OnBalanceChanged += HandleBalanceChanged;
             session.OnInventoryChanged += HandleInventoryChanged;
             session.OnZoneChanged += HandleZoneChanged;
             session.OnStateChanged += HandleStateChanged;
@@ -60,7 +57,6 @@ namespace VertigoCase.Core
 
             wheelCoordinator.Disconnect();
 
-            session.OnBalanceChanged -= HandleBalanceChanged;
             session.OnInventoryChanged -= HandleInventoryChanged;
             session.OnZoneChanged -= HandleZoneChanged;
             session.OnStateChanged -= HandleStateChanged;
@@ -71,15 +67,14 @@ namespace VertigoCase.Core
 
         private void HandleZoneChanged(int zone, ZoneType type) => OnZoneChanged?.Invoke(zone, type);
 
-        private void HandleBalanceChanged(int balance) => OnBalanceChanged?.Invoke(balance);
         private void HandleInventoryChanged(IReadOnlyDictionary<RewardType, int> inventory) =>
             OnInventoryChanged?.Invoke(inventory);
         private void HandleStateChanged(GameState state) => OnStateChanged?.Invoke(state);
-        private void HandleCashedOut(int amount) => OnCashedOut?.Invoke(amount);
+        private void HandleCashedOut(IReadOnlyDictionary<RewardType, int> rewards) =>
+            OnCashedOut?.Invoke(rewards);
 
         public void Restart() => session.Restart();
         public void Leave() => session.Leave();
-        public void Revive() => session.Revive();
         public void GiveUp() => session.GiveUp();
 
         private void EnsureConfigured()

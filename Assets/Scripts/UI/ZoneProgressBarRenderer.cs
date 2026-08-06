@@ -33,24 +33,20 @@ namespace VertigoCase.UI
 
                 if (zone < GameConstants.Zones.FirstZone)
                 {
-                    elements.Labels[i].text = string.Empty;
-                    elements.Labels[i].color = Color.clear;
-                    elements.CellImages[i].color = Color.clear;
+                    elements.Cells[i].Hide();
                     continue;
                 }
 
                 ZoneProgressBarStyle style = theme.StyleFor(typeOf(zone));
-                elements.Labels[i].text = zone.ToString();
-                elements.Labels[i].color = zone < currentZone
-                    ? style.PastTextColor
-                    : style.FutureTextColor;
-                elements.CellImages[i].color = theme.CellTint;
+                elements.Cells[i].Show(
+                    zone,
+                    zone < currentZone ? style.PastTextColor : style.FutureTextColor);
             }
 
             ZoneProgressBarStyle currentStyle = theme.StyleFor(typeOf(currentZone));
             int currentIndex = currentZone - firstVisibleZone;
-            if (currentIndex >= 0 && currentIndex < elements.Labels.Length)
-                elements.Labels[currentIndex].color = currentStyle.CurrentTextColor;
+            if (currentIndex >= 0 && currentIndex < elements.Cells.Length)
+                elements.Cells[currentIndex].SetColor(currentStyle.CurrentTextColor);
 
             return currentStyle.MarkerColor;
         }
