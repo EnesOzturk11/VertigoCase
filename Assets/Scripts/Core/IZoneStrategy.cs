@@ -1,13 +1,12 @@
 namespace VertigoCase.Core
 {
     /// <summary>
-    /// Reward policy for one zone type (Strategy pattern). The contract contains only the operation
-    /// its client needs; bomb presence remains wheel content, not a strategy responsibility.
+    /// Rules exposed by one zone type. Reward values and bomb presence remain wheel content, so a
+    /// value displayed on a slice is never transformed again after the player wins it.
     /// </summary>
     public interface IZoneStrategy
     {
         ZoneType Type { get; }
         bool CanLeave { get; }
-        int ScaleReward(int baseAmount, int zone);
     }
 }

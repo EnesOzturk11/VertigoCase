@@ -5,8 +5,8 @@ using VertigoCase.Data;
 namespace VertigoCase.Core
 {
     /// <summary>
-    /// Extensible policy asset for a zone family. Shared routing data lives here while subclasses
-    /// provide the reward calculation, so a new calculation can be added without editing consumers.
+    /// Configurable policy asset for a zone family. It owns zone routing and leave rules while the
+    /// selected wheel remains the single source of truth for reward amounts.
     /// </summary>
     public abstract class ZonePolicy : ScriptableObject, IZoneStrategy
     {
@@ -26,6 +26,5 @@ namespace VertigoCase.Core
             occurrenceInterval >= GameConstants.Zones.MinimumOccurrenceInterval &&
             zone % occurrenceInterval == 0;
 
-        public abstract int ScaleReward(int baseAmount, int zone);
     }
 }

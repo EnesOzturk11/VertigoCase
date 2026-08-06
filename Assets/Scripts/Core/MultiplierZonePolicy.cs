@@ -1,19 +1,13 @@
 using UnityEngine;
-using VertigoCase.Config;
 
 namespace VertigoCase.Core
 {
     /// <summary>
-    /// Configurable zone policy whose reward is multiplied by the current zone and an asset value.
-    /// Other reward algorithms can extend <see cref="ZonePolicy"/> without changing the catalog.
+    /// Concrete, data-driven zone policy. The legacy class name is retained so existing Unity
+    /// assets keep their script reference; reward multipliers live only on WheelSlice data.
     /// </summary>
     [CreateAssetMenu(fileName = "ZonePolicy_", menuName = "Vertigo/Zone Policy/Multiplier")]
     public sealed class MultiplierZonePolicy : ZonePolicy
     {
-        [SerializeField, Min(GameConstants.Rewards.MinimumZoneMultiplier)]
-        private int rewardMultiplier = GameConstants.Rewards.DefaultZoneMultiplier;
-
-        public override int ScaleReward(int baseAmount, int zone) =>
-            baseAmount * zone * rewardMultiplier;
     }
 }

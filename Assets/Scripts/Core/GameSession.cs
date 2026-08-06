@@ -70,9 +70,10 @@ namespace VertigoCase.Core
                 return;
             }
 
-            IZoneStrategy strategy = strategyResolver.Resolve(zones.CurrentType);
-            int baseAmount = slice.reward.baseAmount * slice.multiplier;
-            int amount = strategy.ScaleReward(baseAmount, zones.CurrentZone);
+            // The value printed on a wheel slice is the final reward. Wheel callouts such as
+            // "Up To x3 Rewards" describe the values already configured on that wheel; applying
+            // the zone number or the callout again would award a different amount than the UI shows.
+            int amount = checked(slice.reward.baseAmount * slice.multiplier);
             rewards.Add(slice.reward.type, amount);
 
             zones.Advance();

@@ -50,8 +50,6 @@ namespace VertigoCase.Config
         {
             public const int DefaultBaseAmount = 100;
             public const int DefaultReviveGoldCost = 25;
-            public const int MinimumZoneMultiplier = 1;
-            public const int DefaultZoneMultiplier = MinimumZoneMultiplier;
         }
 
         public static class Zones
@@ -74,11 +72,22 @@ namespace VertigoCase.Config
             public const float IndicatorWidth = 42f;
             public const float IndicatorHeight = 58f;
             public const float IndicatorTopOffset = 8f;
+            public const float MarkerPulseScale = 0.1f;
+            public const float MarkerPulseSeconds = 0.2f;
+            public const int MarkerPulseVibrato = 5;
+            public const float MarkerPulseElasticity = 0.45f;
         }
 
         public static class Inventory
         {
             public const float RowAnimationSeconds = 0.2f;
+            public const int RewardFlyIconCount = 5;
+            public const float RewardFlyIconSize = 58f;
+            public const float RewardFlyScatterRadius = 64f;
+            public const float RewardFlyScatterSeconds = 0.18f;
+            public const float RewardFlyTravelSeconds = 0.55f;
+            public const float RewardFlyStaggerSeconds = 0.055f;
+            public const float RewardFlyFadeSeconds = 0.12f;
         }
     }
 }

@@ -15,7 +15,7 @@ namespace VertigoCase.Data
         [Tooltip("Reward for this slice. The bomb is a RewardData whose type is Bomb.")]
         public RewardData reward;
 
-        [Tooltip("Amount multiplier applied to the reward's base amount.")]
+        [Tooltip("Multiplier used to calculate both the displayed and awarded amount.")]
         public int multiplier = GameConstants.Wheel.DefaultSliceMultiplier;
 
         [Tooltip("Selection weight. Higher = comes up more often. Rare rewards / the bomb get a lower weight.")]

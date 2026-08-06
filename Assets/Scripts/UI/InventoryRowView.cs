@@ -21,6 +21,8 @@ namespace VertigoCase.UI
         private int currentAmount;
 
         public RewardType Type { get; private set; }
+        public int Amount => currentAmount;
+        public RectTransform IconTarget => iconImage.rectTransform;
 
         public void Bind(RewardType type, Sprite icon, int amount, bool animate)
         {
