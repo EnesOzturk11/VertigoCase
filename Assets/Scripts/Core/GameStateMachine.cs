@@ -1,11 +1,11 @@
-using System;
 using System.Collections.Generic;
+using System;
 
 namespace VertigoCase.Core
 {
     /// <summary>
-    /// Holds the current <see cref="GameState"/>, validates normal transitions and announces every
-    /// accepted change. Pure C# (no MonoBehaviour) so it can be tested without a scene.
+    /// Holds the current <see cref="GameState"/> and validates transitions. Event publication stays
+    /// in GameSession so compound state, wallet and zone mutations are committed before observers run.
     /// </summary>
     public sealed class GameStateMachine : IGameStateMachine
     {
@@ -13,7 +13,10 @@ namespace VertigoCase.Core
             new Dictionary<GameState, HashSet<GameState>>
             {
                 { GameState.Idle, new HashSet<GameState> { GameState.Spinning } },
-                { GameState.Spinning, new HashSet<GameState> { GameState.Resolving } },
+                {
+                    GameState.Spinning,
+                    new HashSet<GameState> { GameState.Idle, GameState.Resolving }
+                },
                 {
                     GameState.Resolving,
                     new HashSet<GameState> { GameState.Idle, GameState.GameOver }
@@ -25,9 +28,6 @@ namespace VertigoCase.Core
 
         // Current state. Read-only from outside; only validated transitions or Reset may write it.
         public GameState Current { get; private set; } = GameState.Idle;
-
-        // Observer hook: fires with the new state whenever it actually changes.
-        public event Action<GameState> OnStateChanged;
 
         public void ChangeState(GameState next)
         {
@@ -55,7 +55,6 @@ namespace VertigoCase.Core
         private void SetState(GameState next)
         {
             Current = next;
-            OnStateChanged?.Invoke(next);
         }
     }
 }

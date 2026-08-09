@@ -16,7 +16,6 @@ MonoBehaviour:
   baseSprite: {fileID: 21300000, guid: 9f0765d4679434bfab147f60ea35f63d, type: 3}
   indicatorSprite: {fileID: 21300000, guid: b34cc095b0e714356b1149e2357058f6, type: 3}
   titleLabel: GOLDEN SPIN
-  rewardCalloutLabel: Up To x10 Rewards
   labelColor: {r: 1, g: 0.82, b: 0, a: 1}
   slices:
   - reward: {fileID: 11400000, guid: 7d6665cdec53f449692e02d5abbeeddb, type: 2}

@@ -24,6 +24,14 @@ namespace VertigoCase.UI
         public int Amount => currentAmount;
         public RectTransform IconTarget => iconImage.rectTransform;
 
+        private void Awake()
+        {
+            if (iconImage == null)
+                throw new InvalidOperationException("Inventory row icon is missing.");
+            if (amountText == null)
+                throw new InvalidOperationException("Inventory row amount label is missing.");
+        }
+
         public void Bind(RewardType type, Sprite icon, int amount, bool animate)
         {
             if (icon == null)

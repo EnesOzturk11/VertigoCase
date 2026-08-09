@@ -14,13 +14,15 @@ namespace VertigoCase.Core
 
         GameState State { get; }
         IReadOnlyDictionary<RewardType, int> Inventory { get; }
+        int CurrentZone { get; }
+        ZoneType CurrentZoneType { get; }
         bool CanLeave { get; }
 
         ZoneType TypeOf(int zone);
         void Initialize();
         void StartSpin();
+        void CancelSpin();
         void CompleteSpin(WheelSlice slice);
-        void Restart();
         void Leave();
         void GiveUp();
     }

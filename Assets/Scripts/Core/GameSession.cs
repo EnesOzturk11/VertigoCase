@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using VertigoCase.Data;
 using VertigoCase.Economy;
 
@@ -15,6 +16,7 @@ namespace VertigoCase.Core
         private readonly IRewardWallet rewards;
         private readonly IGameStateMachine stateMachine;
         private readonly IZoneStrategyResolver strategyResolver;
+        private bool isNotifying;
 
         public event Action<IReadOnlyDictionary<RewardType, int>> OnInventoryChanged;
         public event Action<int, ZoneType> OnZoneChanged;
@@ -23,6 +25,8 @@ namespace VertigoCase.Core
 
         public GameState State => stateMachine.Current;
         public IReadOnlyDictionary<RewardType, int> Inventory => rewards.Amounts;
+        public int CurrentZone => zones.CurrentZone;
+        public ZoneType CurrentZoneType => zones.CurrentType;
         public bool CanLeave =>
             State == GameState.Idle && strategyResolver.Resolve(zones.CurrentType).CanLeave;
         public ZoneType TypeOf(int zone) => zones.TypeOf(zone);
@@ -37,82 +41,146 @@ namespace VertigoCase.Core
             this.rewards = rewards ?? throw new ArgumentNullException(nameof(rewards));
             this.stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
             this.strategyResolver = strategyResolver ?? throw new ArgumentNullException(nameof(strategyResolver));
-
-            this.rewards.OnChanged += PublishRewards;
-            this.stateMachine.OnStateChanged += HandleStateChanged;
         }
 
         public void Initialize()
         {
-            PublishZone();
-            PublishRewards();
+            if (isNotifying) return;
+            PublishRunState();
         }
 
         public void StartSpin()
         {
-            if (State != GameState.Idle) return;
+            if (isNotifying || State != GameState.Idle) return;
             stateMachine.ChangeState(GameState.Spinning);
+            Notify(PublishState);
+        }
+
+        public void CancelSpin()
+        {
+            if (isNotifying || State != GameState.Spinning) return;
+            stateMachine.ChangeState(GameState.Idle);
+            Notify(PublishState);
         }
 
         public void CompleteSpin(WheelSlice slice)
         {
-            if (State != GameState.Spinning) return;
+            if (isNotifying || State != GameState.Spinning) return;
             if (slice == null) throw new ArgumentNullException(nameof(slice));
-            if (!slice.IsBomb && slice.reward == null)
-                throw new InvalidOperationException("A non-bomb wheel slice must reference reward data.");
+            int rewardAmount = ValidateAndCalculateReward(slice);
 
+            // All failure-prone calculations are completed before mutation. Observers are notified
+            // only after the state, wallet and zone have committed as one synchronous operation.
             stateMachine.ChangeState(GameState.Resolving);
-
             if (slice.IsBomb)
             {
-                // A bomb ends the run immediately. The loss is a domain/economy rule, not a UI
-                // choice deferred until the player presses Give Up.
                 rewards.Clear();
                 zones.Reset();
-                PublishZone();
                 stateMachine.ChangeState(GameState.GameOver);
-                return;
+            }
+            else
+            {
+                rewards.Add(slice.Reward.Type, rewardAmount);
+                zones.Advance();
+                stateMachine.ChangeState(GameState.Idle);
             }
 
-            // The value printed on a wheel slice is the final reward. Wheel callouts such as
-            // "Up To x3 Rewards" describe the values already configured on that wheel; applying
-            // the zone number or the callout again would award a different amount than the UI shows.
-            int amount = checked(slice.reward.baseAmount * slice.multiplier);
-            rewards.Add(slice.reward.type, amount);
-
-            zones.Advance();
-            PublishZone();
-            stateMachine.ChangeState(GameState.Idle);
+            PublishRunState();
         }
 
-        public void Restart()
+        private void ResetRun()
         {
             zones.Reset();
             rewards.Clear();
-            PublishZone();
             stateMachine.Reset();
+
+            PublishRunState();
         }
 
         public void Leave()
         {
-            if (!CanLeave) return;
+            if (isNotifying || !CanLeave) return;
 
-            OnCashedOut?.Invoke(new Dictionary<RewardType, int>(rewards.Amounts));
-            Restart();
+            IReadOnlyDictionary<RewardType, int> cashedOutRewards =
+                CreateInventorySnapshot();
+
+            // The run reset is committed before observers receive the immutable cash-out snapshot.
+            // An observer failure therefore cannot leave half-reset session state behind.
+            ResetRun();
+            Notify(() => OnCashedOut?.Invoke(cashedOutRewards));
         }
 
         public void GiveUp()
         {
-            if (State != GameState.GameOver) return;
-            Restart();
+            if (isNotifying || State != GameState.GameOver) return;
+            ResetRun();
+        }
+
+        private int ValidateAndCalculateReward(WheelSlice slice)
+        {
+            if (slice.IsBomb)
+            {
+                if (slice.Reward != null)
+                    throw new InvalidOperationException(
+                        "A bomb wheel slice cannot reference collectible reward data.");
+
+                return 0;
+            }
+
+            if (slice.Reward == null)
+                throw new InvalidOperationException(
+                    "A non-bomb wheel slice must reference reward data.");
+            if (!Enum.IsDefined(typeof(RewardType), slice.Reward.Type))
+                throw new InvalidOperationException("The wheel slice has an unknown reward type.");
+            if (slice.Reward.BaseAmount <= 0 || slice.Multiplier <= 0)
+                throw new InvalidOperationException(
+                    "Reward base amount and multiplier must be positive.");
+            if (zones.CurrentZone == int.MaxValue)
+                throw new InvalidOperationException("The final supported zone has been reached.");
+
+            int amount = checked(slice.Reward.BaseAmount * slice.Multiplier);
+            checked
+            {
+                _ = rewards.AmountOf(slice.Reward.Type) + amount;
+            }
+
+            return amount;
         }
 
         private void PublishRewards()
         {
-            OnInventoryChanged?.Invoke(rewards.Amounts);
+            OnInventoryChanged?.Invoke(CreateInventorySnapshot());
         }
 
+        private IReadOnlyDictionary<RewardType, int> CreateInventorySnapshot() =>
+            new ReadOnlyDictionary<RewardType, int>(
+                new Dictionary<RewardType, int>(rewards.Amounts));
+
         private void PublishZone() => OnZoneChanged?.Invoke(zones.CurrentZone, zones.CurrentType);
-        private void HandleStateChanged(GameState state) => OnStateChanged?.Invoke(state);
+        private void PublishState() => OnStateChanged?.Invoke(State);
+
+        private void PublishRunState()
+        {
+            Notify(() =>
+            {
+                PublishRewards();
+                PublishZone();
+                PublishState();
+            });
+        }
+
+        private void Notify(Action notification)
+        {
+            bool wasNotifying = isNotifying;
+            isNotifying = true;
+            try
+            {
+                notification();
+            }
+            finally
+            {
+                isNotifying = wasNotifying;
+            }
+        }
     }
 }

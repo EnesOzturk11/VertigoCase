@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace VertigoCase.UI
 {
-    /// <summary>References to the generated visual hierarchy.</summary>
+    /// <summary>References to the instantiated, prefab-authored visual hierarchy.</summary>
     internal sealed class ZoneProgressBarElements
     {
         public RectTransform ItemsRoot { get; }

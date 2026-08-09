@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using VertigoCase.Data;
 
 namespace VertigoCase.Economy
@@ -13,30 +14,39 @@ namespace VertigoCase.Economy
     {
         // Per-type accumulated amount. Private so only wallet operations can mutate it.
         private readonly Dictionary<RewardType, int> _amounts = new Dictionary<RewardType, int>();
+        private readonly IReadOnlyDictionary<RewardType, int> _readOnlyAmounts;
 
-        // Read-only view for the inventory UI (iterate type -> count).
-        public IReadOnlyDictionary<RewardType, int> Amounts => _amounts;
+        // The wrapper prevents consumers from casting the public view back to Dictionary and
+        // bypassing wallet invariants. Values remain live while mutation stays private.
+        public IReadOnlyDictionary<RewardType, int> Amounts => _readOnlyAmounts;
 
-        // Fires whenever the inventory changes; listeners re-read Amounts.
-        public event Action OnChanged;
+        public RewardService()
+        {
+            _readOnlyAmounts = new ReadOnlyDictionary<RewardType, int>(_amounts);
+        }
 
         public void Add(RewardType type, int amount)
         {
-            if (amount <= 0) return;                  // a zero/negative reward must not corrupt the bank
+            ValidateType(type);
+            if (amount <= 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(amount), amount, "Reward amount must be positive.");
+
             _amounts.TryGetValue(type, out int current);
             _amounts[type] = checked(current + amount);
-            OnChanged?.Invoke();
         }
 
         // How much of one type has been collected (0 if none yet).
         public int AmountOf(RewardType type)
         {
+            ValidateType(type);
             _amounts.TryGetValue(type, out int value);
             return value;
         }
 
         public bool CanAfford(RewardType type, int amount)
         {
+            ValidateType(type);
             if (amount < 0)
                 throw new ArgumentOutOfRangeException(nameof(amount), amount, "Amount cannot be negative.");
 
@@ -56,15 +66,18 @@ namespace VertigoCase.Economy
             else
                 _amounts[type] = remaining;
 
-            OnChanged?.Invoke();
             return true;
         }
 
         public void Clear()
         {
-            if (_amounts.Count == 0) return;          // already empty -> no change, no event
             _amounts.Clear();
-            OnChanged?.Invoke();
+        }
+
+        private static void ValidateType(RewardType type)
+        {
+            if (!Enum.IsDefined(typeof(RewardType), type))
+                throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown reward type.");
         }
     }
 }

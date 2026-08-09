@@ -17,9 +17,9 @@ namespace VertigoCase.UI
             ZoneProgressBarLayout layout,
             ZoneProgressBarTheme theme)
         {
-            this.elements = elements;
-            this.layout = layout;
-            this.theme = theme;
+            this.elements = elements ?? throw new ArgumentNullException(nameof(elements));
+            this.layout = layout ?? throw new ArgumentNullException(nameof(layout));
+            this.theme = theme ?? throw new ArgumentNullException(nameof(theme));
         }
 
         public Color Render(
@@ -27,6 +27,8 @@ namespace VertigoCase.UI
             int firstVisibleZone,
             Func<int, ZoneType> typeOf)
         {
+            if (typeOf == null) throw new ArgumentNullException(nameof(typeOf));
+
             for (int i = 0; i < layout.VisibleZoneCount; i++)
             {
                 int zone = firstVisibleZone + i;

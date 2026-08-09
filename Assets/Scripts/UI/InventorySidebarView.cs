@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using DG.Tweening;
 using UnityEngine;
-using UnityEngine.UI;
 using VertigoCase.Config;
 using VertigoCase.Core;
 using VertigoCase.Data;
@@ -19,8 +17,11 @@ namespace VertigoCase.UI
         [Serializable]
         private sealed class RewardIcon
         {
-            public RewardType type;
-            public Sprite icon;
+            [SerializeField] private RewardType type;
+            [SerializeField] private Sprite icon;
+
+            public RewardType Type => type;
+            public Sprite Icon => icon;
         }
 
         [Header("References")]
@@ -41,8 +42,7 @@ namespace VertigoCase.UI
         private IInventoryPort gamePort;
         private readonly Dictionary<RewardType, InventoryRowView> rows =
             new Dictionary<RewardType, InventoryRowView>();
-        private readonly List<Sequence> rewardFlySequences = new List<Sequence>();
-        private readonly List<GameObject> rewardFlyIcons = new List<GameObject>();
+        private RewardFlyAnimator rewardFlyAnimator;
 
         private void Awake()
         {
@@ -59,6 +59,11 @@ namespace VertigoCase.UI
                 throw new InvalidOperationException("Reward fly animation origin is missing.");
 
             ValidateIconConfiguration();
+            rewardFlyAnimator = new RewardFlyAnimator(
+                gameObject,
+                rewardFlyLayer,
+                rewardFlyOrigin,
+                rewardFlyIconCount);
             ClearSceneRows();
         }
 
@@ -74,7 +79,7 @@ namespace VertigoCase.UI
             if (gamePort != null)
                 gamePort.OnInventoryChanged -= HandleInventoryChanged;
 
-            CancelRewardFlyAnimations();
+            rewardFlyAnimator?.CancelAll();
         }
 
         private void HandleInventoryChanged(IReadOnlyDictionary<RewardType, int> inventory)
@@ -86,141 +91,39 @@ namespace VertigoCase.UI
             IReadOnlyDictionary<RewardType, int> inventory,
             bool animate)
         {
+            if (inventory == null) throw new ArgumentNullException(nameof(inventory));
+
             if (inventory.Count == 0)
-                CancelRewardFlyAnimations();
+                rewardFlyAnimator.CancelAll();
 
             foreach (RewardIcon entry in icons)
             {
-                int amount = inventory.TryGetValue(entry.type, out int value) ? value : 0;
+                int amount = inventory.TryGetValue(entry.Type, out int value) ? value : 0;
 
                 if (amount <= 0)
                 {
-                    RemoveRow(entry.type, animate);
+                    RemoveRow(entry.Type, animate);
                     continue;
                 }
 
-                if (!rows.TryGetValue(entry.type, out InventoryRowView row))
+                if (!rows.TryGetValue(entry.Type, out InventoryRowView row))
                 {
                     row = Instantiate(rowPrefab, content);
-                    row.Bind(entry.type, entry.icon, animate ? 0 : amount, animate);
-                    rows.Add(entry.type, row);
+                    row.Bind(entry.Type, entry.Icon, animate ? 0 : amount, animate);
+                    rows.Add(entry.Type, row);
 
                     if (animate)
-                        PlayRewardFlyAnimation(row, entry.icon, amount);
+                        rewardFlyAnimator.Play(row, entry.Icon, amount);
                     continue;
                 }
 
                 if (animate && amount > row.Amount)
-                    PlayRewardFlyAnimation(row, entry.icon, amount);
+                    rewardFlyAnimator.Play(row, entry.Icon, amount);
                 else
+                {
+                    rewardFlyAnimator.Cancel(row);
                     row.SetAmount(amount, animate);
-            }
-        }
-
-        private void PlayRewardFlyAnimation(
-            InventoryRowView row,
-            Sprite rewardIcon,
-            int finalAmount)
-        {
-            Canvas.ForceUpdateCanvases();
-
-            var spawnedIcons = new List<GameObject>(rewardFlyIconCount);
-            Sequence sequence = DOTween.Sequence().SetLink(gameObject);
-            rewardFlySequences.Add(sequence);
-
-            Vector3 origin = rewardFlyOrigin.position;
-            Vector3 target = row.IconTarget.position;
-
-            for (int i = 0; i < rewardFlyIconCount; i++)
-            {
-                Image flyIcon = CreateRewardFlyIcon(rewardIcon, origin);
-                spawnedIcons.Add(flyIcon.gameObject);
-
-                float delay = i * GameConstants.Inventory.RewardFlyStaggerSeconds;
-                float angle = i * Mathf.PI * 2f / rewardFlyIconCount;
-                float radius = GameConstants.Inventory.RewardFlyScatterRadius *
-                               (i % 2 == 0 ? 1f : 0.72f);
-                Vector3 scatterTarget = origin +
-                                        new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f) * radius;
-
-                RectTransform iconTransform = flyIcon.rectTransform;
-                sequence.Insert(
-                    delay,
-                    iconTransform.DOScale(Vector3.one, GameConstants.Inventory.RowAnimationSeconds)
-                        .SetEase(Ease.OutBack));
-                sequence.Insert(
-                    delay,
-                    iconTransform.DOMove(
-                            scatterTarget,
-                            GameConstants.Inventory.RewardFlyScatterSeconds)
-                        .SetEase(Ease.OutQuad));
-                sequence.Insert(
-                    delay + GameConstants.Inventory.RewardFlyScatterSeconds,
-                    iconTransform.DOMove(
-                            target,
-                            GameConstants.Inventory.RewardFlyTravelSeconds)
-                        .SetEase(Ease.InQuad));
-                sequence.Insert(
-                    delay + GameConstants.Inventory.RewardFlyScatterSeconds +
-                    GameConstants.Inventory.RewardFlyTravelSeconds -
-                    GameConstants.Inventory.RewardFlyFadeSeconds,
-                    flyIcon.DOFade(0f, GameConstants.Inventory.RewardFlyFadeSeconds));
-            }
-
-            sequence.OnComplete(() =>
-            {
-                if (row != null)
-                    row.SetAmount(finalAmount, true);
-
-                DestroyRewardFlyIcons(spawnedIcons);
-                rewardFlySequences.Remove(sequence);
-            });
-        }
-
-        private Image CreateRewardFlyIcon(Sprite sprite, Vector3 origin)
-        {
-            var iconObject = new GameObject(
-                "ui_image_reward_fly_value",
-                typeof(RectTransform),
-                typeof(CanvasRenderer),
-                typeof(Image));
-            iconObject.layer = gameObject.layer;
-
-            RectTransform iconTransform = iconObject.GetComponent<RectTransform>();
-            iconTransform.SetParent(rewardFlyLayer, false);
-            iconTransform.SetAsLastSibling();
-            iconTransform.position = origin;
-            iconTransform.sizeDelta = Vector2.one * GameConstants.Inventory.RewardFlyIconSize;
-            iconTransform.localScale = Vector3.zero;
-
-            Image icon = iconObject.GetComponent<Image>();
-            icon.sprite = sprite;
-            icon.preserveAspect = true;
-            icon.raycastTarget = false;
-            icon.maskable = false;
-
-            rewardFlyIcons.Add(iconObject);
-            return icon;
-        }
-
-        private void CancelRewardFlyAnimations()
-        {
-            for (int i = rewardFlySequences.Count - 1; i >= 0; i--)
-                rewardFlySequences[i]?.Kill(false);
-
-            rewardFlySequences.Clear();
-            DestroyRewardFlyIcons(rewardFlyIcons);
-            rewardFlyIcons.Clear();
-        }
-
-        private void DestroyRewardFlyIcons(IReadOnlyList<GameObject> iconsToDestroy)
-        {
-            for (int i = iconsToDestroy.Count - 1; i >= 0; i--)
-            {
-                GameObject icon = iconsToDestroy[i];
-                rewardFlyIcons.Remove(icon);
-                if (icon != null)
-                    Destroy(icon);
+                }
             }
         }
 
@@ -230,6 +133,7 @@ namespace VertigoCase.UI
                 return;
 
             rows.Remove(type);
+            rewardFlyAnimator.Cancel(row);
             if (animate)
                 row.HideAndDestroy();
             else
@@ -246,12 +150,12 @@ namespace VertigoCase.UI
             {
                 if (entry == null)
                     throw new InvalidOperationException("Inventory icon entries cannot be null.");
-                if (entry.icon == null)
+                if (entry.Icon == null)
                     throw new InvalidOperationException(
-                        "Inventory icon is missing for " + entry.type + ".");
-                if (!configuredTypes.Add(entry.type))
+                        "Inventory icon is missing for " + entry.Type + ".");
+                if (!configuredTypes.Add(entry.Type))
                     throw new InvalidOperationException(
-                        "Inventory contains a duplicate icon mapping for " + entry.type + ".");
+                        "Inventory contains a duplicate icon mapping for " + entry.Type + ".");
             }
 
             foreach (RewardType type in Enum.GetValues(typeof(RewardType)))
@@ -266,7 +170,11 @@ namespace VertigoCase.UI
         {
             rows.Clear();
             for (int i = content.childCount - 1; i >= 0; i--)
-                Destroy(content.GetChild(i).gameObject);
+            {
+                GameObject staleRow = content.GetChild(i).gameObject;
+                staleRow.SetActive(false);
+                Destroy(staleRow);
+            }
         }
     }
 }

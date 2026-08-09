@@ -25,7 +25,7 @@ namespace VertigoCase.Core
         public ZoneType CurrentType => TypeOf(CurrentZone);
 
         // Move to the next zone after a successful (non-bomb) spin.
-        public void Advance() => CurrentZone++;
+        public void Advance() => CurrentZone = checked(CurrentZone + 1);
 
         // Start a new run without replacing the service instance and its dependencies.
         public void Reset() => CurrentZone = GameConstants.Zones.FirstZone;

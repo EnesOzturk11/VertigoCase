@@ -32,10 +32,14 @@ namespace VertigoCase.Core
             if (session != null)
                 throw new InvalidOperationException("WheelCoordinator is already connected.");
 
-            session = gameSession ?? throw new ArgumentNullException(nameof(gameSession));
+            if (gameSession == null) throw new ArgumentNullException(nameof(gameSession));
 
-            wheelSpinner.OnSpinStarted += session.StartSpin;
+            // Complete all failure-prone setup before publishing the connected state.
+            ApplyWheel(gameSession.CurrentZoneType);
+            session = gameSession;
+
             wheelSpinner.OnSpinCompleted += session.CompleteSpin;
+            wheelSpinner.OnSpinCancelled += session.CancelSpin;
             session.OnZoneChanged += HandleZoneChanged;
         }
 
@@ -43,13 +47,50 @@ namespace VertigoCase.Core
         {
             if (session == null) return;
 
-            wheelSpinner.OnSpinStarted -= session.StartSpin;
-            wheelSpinner.OnSpinCompleted -= session.CompleteSpin;
-            session.OnZoneChanged -= HandleZoneChanged;
-            session = null;
+            IGameSession disconnectedSession = session;
+            try
+            {
+                wheelSpinner.CancelSpin();
+            }
+            finally
+            {
+                wheelSpinner.OnSpinCompleted -= disconnectedSession.CompleteSpin;
+                wheelSpinner.OnSpinCancelled -= disconnectedSession.CancelSpin;
+                disconnectedSession.OnZoneChanged -= HandleZoneChanged;
+                session = null;
+            }
+        }
+
+        public void Spin()
+        {
+            if (session == null)
+                return;
+            if (session.State != GameState.Idle)
+                return;
+
+            IGameSession activeSession = session;
+            activeSession.StartSpin();
+            if (session != activeSession || activeSession.State != GameState.Spinning)
+                return;
+
+            try
+            {
+                if (!wheelSpinner.TrySpin())
+                    activeSession.CancelSpin();
+            }
+            catch
+            {
+                activeSession.CancelSpin();
+                throw;
+            }
         }
 
         private void HandleZoneChanged(int _, ZoneType type)
+        {
+            ApplyWheel(type);
+        }
+
+        private void ApplyWheel(ZoneType type)
         {
             WheelData data = wheelResolver.WheelFor(type);
             wheelPresenter.SetWheel(data);

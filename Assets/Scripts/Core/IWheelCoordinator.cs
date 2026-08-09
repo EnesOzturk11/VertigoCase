@@ -5,5 +5,6 @@ namespace VertigoCase.Core
     {
         void Connect(IGameSession session);
         void Disconnect();
+        void Spin();
     }
 }

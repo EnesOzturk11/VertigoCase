@@ -1,22 +1,23 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
-using VertigoCase.Data;
-using VertigoCase.Wheel;
+using VertigoCase.Core;
 
 namespace VertigoCase.UI
 {
     /// <summary>
-    /// Wires the Spin button through <see cref="IWheelSpinner"/> (the case forbids binding OnClick
-    /// in the Inspector). It only forwards clicks and reflects spin lifecycle events.
+    /// Wires the Spin button through the application-facing spin port. The view never starts a
+    /// tween directly, so the session authorizes the state transition before animation begins.
     /// </summary>
     [RequireComponent(typeof(Button))]
     public class SpinButtonBinder : MonoBehaviour
     {
         [SerializeField] private Button spinButton;
-        [SerializeField] private MonoBehaviour spinController;
+        [FormerlySerializedAs("spinController")]
+        [SerializeField] private MonoBehaviour game;
 
-        private IWheelSpinner spinner;
+        private ISpinPort gamePort;
 
         // Auto-assign references in the editor so we don't hand-wire what code can find (case rule).
         private void OnValidate()
@@ -26,31 +27,31 @@ namespace VertigoCase.UI
 
         private void Awake()
         {
-            spinner = spinController as IWheelSpinner ??
-                      throw new InvalidOperationException(
-                          "SpinButtonBinder requires a component implementing IWheelSpinner.");
+            if (spinButton == null)
+                spinButton = GetComponent<Button>();
+
+            gamePort = game as ISpinPort ??
+                       throw new InvalidOperationException(
+                           "SpinButtonBinder requires a component implementing ISpinPort.");
         }
 
         private void OnEnable()
         {
-            if (spinButton == null) return;
-
-            spinButton.onClick.AddListener(spinner.Spin);
-            spinner.OnSpinStarted += HandleSpinStarted;
-            spinner.OnSpinCompleted += HandleSpinCompleted;
+            spinButton.onClick.AddListener(gamePort.Spin);
+            gamePort.OnStateChanged += HandleStateChanged;
+            Refresh();
         }
 
         private void OnDisable() // mirror OnEnable so we never double-subscribe or leak listeners
         {
-            if (spinButton == null || spinner == null) return;
+            if (spinButton == null || gamePort == null) return;
 
-            spinButton.onClick.RemoveListener(spinner.Spin);
-            spinner.OnSpinStarted -= HandleSpinStarted;
-            spinner.OnSpinCompleted -= HandleSpinCompleted;
+            spinButton.onClick.RemoveListener(gamePort.Spin);
+            gamePort.OnStateChanged -= HandleStateChanged;
         }
 
-        // While spinning the button is locked; when the spin ends it becomes usable again.
-        private void HandleSpinStarted()                   => spinButton.interactable = false;
-        private void HandleSpinCompleted(WheelSlice slice) => spinButton.interactable = true;
+        private void HandleStateChanged(GameState _) => Refresh();
+
+        private void Refresh() => spinButton.interactable = gamePort.State == GameState.Idle;
     }
 }

@@ -21,9 +21,15 @@ namespace VertigoCase.UI
             gamePort = game as IZonePort ??
                        throw new InvalidOperationException(
                            "ZoneLabelView requires a component implementing IZonePort.");
+            if (zoneText == null)
+                throw new InvalidOperationException("Zone label is missing.");
         }
 
-        private void OnEnable() => gamePort.OnZoneChanged += HandleZone;
+        private void OnEnable()
+        {
+            gamePort.OnZoneChanged += HandleZone;
+            HandleZone(gamePort.CurrentZone, gamePort.CurrentZoneType);
+        }
 
         private void OnDisable()
         {

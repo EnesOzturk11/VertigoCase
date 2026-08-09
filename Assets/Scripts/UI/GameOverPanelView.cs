@@ -19,30 +19,36 @@ namespace VertigoCase.UI
 
         private IGameOverPort gamePort;
 
+        private void OnValidate()
+        {
+            if (giveUpButton == null && panelRoot != null)
+                giveUpButton = panelRoot.GetComponentInChildren<Button>(true);
+        }
+
         private void Awake()
         {
             gamePort = game as IGameOverPort ??
                        throw new InvalidOperationException(
                            "GameOverPanelView requires a component implementing IGameOverPort.");
+            if (panelRoot == null)
+                throw new InvalidOperationException("Game over panel root is missing.");
+            if (giveUpButton == null)
+                throw new InvalidOperationException("Game over Give Up button is missing.");
         }
 
         private void OnEnable()
         {
-            if (panelRoot == null) return;
-
             gamePort.OnStateChanged += HandleStateChanged;
-            if (giveUpButton != null)
-                giveUpButton.onClick.AddListener(HandleGiveUp);
+            giveUpButton.onClick.AddListener(HandleGiveUp);
             Refresh(gamePort.State);
         }
 
         private void OnDisable()
         {
-            if (gamePort == null || panelRoot == null) return;
+            if (gamePort == null) return;
 
             gamePort.OnStateChanged -= HandleStateChanged;
-            if (giveUpButton != null)
-                giveUpButton.onClick.RemoveListener(HandleGiveUp);
+            giveUpButton.onClick.RemoveListener(HandleGiveUp);
         }
 
         private void HandleStateChanged(GameState state) => Refresh(state);

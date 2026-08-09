@@ -60,7 +60,11 @@ namespace VertigoCase.UI
             animator = new ZoneProgressBarAnimator(elements);
         }
 
-        private void OnEnable() => gamePort.OnZoneChanged += HandleZoneChanged;
+        private void OnEnable()
+        {
+            gamePort.OnZoneChanged += HandleZoneChanged;
+            HandleZoneChanged(gamePort.CurrentZone, gamePort.CurrentZoneType);
+        }
 
         private void OnDisable()
         {
@@ -75,7 +79,7 @@ namespace VertigoCase.UI
             if (zone < GameConstants.Zones.FirstZone)
                 throw new ArgumentOutOfRangeException(nameof(zone), zone, "Zone must be positive.");
 
-            animator.Stop(true);
+            animator.Stop(false);
 
             if (!hasZone)
             {

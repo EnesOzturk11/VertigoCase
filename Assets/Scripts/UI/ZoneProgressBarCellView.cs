@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -9,6 +10,12 @@ namespace VertigoCase.UI
         [SerializeField] private TextMeshProUGUI label;
 
         public RectTransform RectTransform => (RectTransform)transform;
+
+        private void Awake()
+        {
+            if (label == null)
+                throw new InvalidOperationException("Zone progress cell label is missing.");
+        }
 
         public void Show(int zone, Color color)
         {

@@ -22,6 +22,8 @@ namespace VertigoCase.UI
             gamePort = game as IInventoryPort ??
                        throw new InvalidOperationException(
                            "RewardCounterView requires a component implementing IInventoryPort.");
+            if (amountText == null)
+                throw new InvalidOperationException("Reward counter label is missing.");
         }
 
         private void OnEnable()

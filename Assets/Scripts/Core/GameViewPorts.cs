@@ -11,6 +11,13 @@ namespace VertigoCase.Core
         void GiveUp();
     }
 
+    public interface ISpinPort
+    {
+        GameState State { get; }
+        event Action<GameState> OnStateChanged;
+        void Spin();
+    }
+
     public interface IInventoryPort
     {
         IReadOnlyDictionary<RewardType, int> Inventory { get; }
@@ -19,6 +26,8 @@ namespace VertigoCase.Core
 
     public interface IZonePort
     {
+        int CurrentZone { get; }
+        ZoneType CurrentZoneType { get; }
         event Action<int, ZoneType> OnZoneChanged;
         ZoneType TypeOf(int zone);
     }

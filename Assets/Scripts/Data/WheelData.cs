@@ -9,28 +9,32 @@ namespace VertigoCase.Data
     /// no code change needed. Bronze = normal (with bomb), Silver = safe, Golden = super.
     /// </summary>
     [CreateAssetMenu(fileName = "Wheel_", menuName = "Vertigo/Wheel Data")]
-    public class WheelData : ScriptableObject
+    public sealed class WheelData : ScriptableObject
     {
         [Tooltip("Display name, e.g. 'Bronze' / 'Silver' / 'Golden'")]
-        public string wheelName;
+        [SerializeField] private string wheelName;
 
         [Tooltip("Wheel body sprite")]
-        public Sprite baseSprite;
+        [SerializeField] private Sprite baseSprite;
 
         [Tooltip("Pointer/indicator sprite")]
-        public Sprite indicatorSprite;
+        [SerializeField] private Sprite indicatorSprite;
 
         [Header("Labels")]
         [Tooltip("Headline displayed above this wheel, e.g. 'GOLDEN SPIN'")]
-        public string titleLabel;
+        [SerializeField] private string titleLabel;
 
-        [Tooltip("Reward callout displayed below this wheel, e.g. 'Up To x10 Rewards'")]
-        public string rewardCalloutLabel;
-
-        [Tooltip("Shared color used by the wheel headline and reward callout")]
-        public Color labelColor = new Color(1f, 0.82f, 0f, 1f);
+        [Tooltip("Color used by the wheel headline")]
+        [SerializeField] private Color labelColor = new Color(1f, 0.82f, 0f, 1f);
 
         [Tooltip("The slices placed around the wheel")]
-        public List<WheelSlice> slices = new List<WheelSlice>();
+        [SerializeField] private List<WheelSlice> slices = new List<WheelSlice>();
+
+        public string WheelName => wheelName;
+        public Sprite BaseSprite => baseSprite;
+        public Sprite IndicatorSprite => indicatorSprite;
+        public string TitleLabel => titleLabel;
+        public Color LabelColor => labelColor;
+        public IReadOnlyList<WheelSlice> Slices => slices;
     }
 }

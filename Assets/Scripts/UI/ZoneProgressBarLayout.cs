@@ -1,3 +1,4 @@
+using System;
 using VertigoCase.Config;
 
 namespace VertigoCase.UI
@@ -21,6 +22,17 @@ namespace VertigoCase.UI
             float barHeight,
             float currentMarkerHeight)
         {
+            if (visibleZoneCount < 1)
+                throw new ArgumentOutOfRangeException(nameof(visibleZoneCount));
+            if (cellWidth <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(cellWidth));
+            if (cellSpacing < 0f)
+                throw new ArgumentOutOfRangeException(nameof(cellSpacing));
+            if (barHeight <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(barHeight));
+            if (currentMarkerHeight <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(currentMarkerHeight));
+
             VisibleZoneCount = visibleZoneCount % 2 == 0
                 ? visibleZoneCount + 1
                 : visibleZoneCount;

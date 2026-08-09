@@ -21,17 +21,29 @@ namespace VertigoCase.UI
         private RectTransform IconRect => iconImage != null ? iconImage.rectTransform : null;
         private RectTransform AmountRect => amountText != null ? amountText.rectTransform : null;
 
+        private void Awake()
+        {
+            if (iconImage == null)
+                throw new System.InvalidOperationException("Slice icon is missing.");
+            if (amountText == null)
+                throw new System.InvalidOperationException("Slice amount label is missing.");
+        }
+
         // Called by WheelView for each slice. The view is dumb: it just shows what the data says.
         public void Bind(WheelSlice slice)
         {
-            if (slice == null || (!slice.IsBomb && slice.reward == null)) return;
+            if (slice == null)
+                throw new System.ArgumentNullException(nameof(slice));
+            if (!slice.IsBomb && slice.Reward == null)
+                throw new System.InvalidOperationException(
+                    "A reward slice must reference reward data.");
 
             bool isBomb = slice.IsBomb;
             ConfigureVisuals(isBomb);
             iconImage.sprite = slice.Icon;
             float visibleIconHeight = NormalizeIconSize(slice.Icon);
 
-            int amount = isBomb ? 0 : slice.reward.baseAmount * slice.multiplier;
+            int amount = isBomb ? 0 : checked(slice.Reward.BaseAmount * slice.Multiplier);
 
             // The bomb shows only its icon. Rewards use the reference style: x10, x300, x1.5K.
             amountText.text = isBomb

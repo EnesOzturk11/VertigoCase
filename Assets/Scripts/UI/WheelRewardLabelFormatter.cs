@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using VertigoCase.Config;
 
@@ -11,6 +12,10 @@ namespace VertigoCase.UI
     {
         public static string Format(int amount)
         {
+            if (amount < 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(amount), amount, "Reward amount cannot be negative.");
+
             if (amount >= GameConstants.Wheel.CompactMillions)
             {
                 return BuildCompactLabel(

@@ -10,7 +10,7 @@ namespace VertigoCase.Wheel
     /// <summary>
     /// Spins the wheel with DOTween and stops with the winning slice under the indicator.
     /// SliceResolver decides the outcome first (pure logic); this MonoBehaviour only animates to it
-    /// and raises events. Views listen to those events and never read the spin math (Observer + DIP).
+    /// and raises lifecycle events. The coordinator consumes them; views never read the spin math.
     /// </summary>
     public class SpinController : MonoBehaviour, IWheelSpinner
     {
@@ -32,21 +32,33 @@ namespace VertigoCase.Wheel
         private WheelSlice pendingResult;
 
         // Observer: logic finishes, listeners (UI / VFX / economy) react. The view does not know the spin math.
-        public event Action OnSpinStarted;
         public event Action<WheelSlice> OnSpinCompleted;
+        public event Action OnSpinCancelled;
+
+        private void Awake()
+        {
+            if (wheelRoot == null)
+                throw new InvalidOperationException("SpinController requires a wheel root.");
+            if (duration <= 0f)
+                throw new InvalidOperationException("Spin duration must be positive.");
+            if (extraSpins < 0)
+                throw new InvalidOperationException("Extra spin count cannot be negative.");
+        }
 
         // Swap the wheel this controller resolves and rotates. Must stay in sync with WheelView's data.
-        public void SetWheel(WheelData data) => wheelData = data;
+        public void SetWheel(WheelData data) =>
+            wheelData = data ?? throw new ArgumentNullException(nameof(data));
 
-        [ContextMenu("Test Spin")] // right-click the component header in Play mode to fire a spin without UI
-        public void Spin()
+        public bool TrySpin()
         {
-            if (IsSpinning || wheelData == null || wheelRoot == null) return; // guard: don't start while spinning
-            if (wheelData.slices.Count == 0) return;
+            if (!isActiveAndEnabled || IsSpinning || wheelData == null || wheelRoot == null)
+                return false;
+            if (wheelData.Slices == null || wheelData.Slices.Count == 0)
+                return false;
 
             int index = SliceResolver.Resolve(wheelData);  // decide the winner FIRST, then animate to it
-            pendingResult = wheelData.slices[index];
-            float step = GameConstants.Wheel.FullRotationDegrees / wheelData.slices.Count;
+            pendingResult = wheelData.Slices[index];
+            float step = GameConstants.Wheel.FullRotationDegrees / wheelData.Slices.Count;
 
             // WheelView places slice 0 at the top and increases index CLOCKWISE, while Unity's +Z is
             // COUNTER-clockwise. So a positive Z of index*step brings slice 'index' back under the indicator.
@@ -64,7 +76,7 @@ namespace VertigoCase.Wheel
                 .SetEase(Ease.OutCubic)
                 .OnComplete(HandleSpinCompleted);
 
-            OnSpinStarted?.Invoke();
+            return true;
         }
 
         private void HandleSpinCompleted()
@@ -79,18 +91,19 @@ namespace VertigoCase.Wheel
 
             if (logResult)
                 GameLog.Info(
-                    $"[SpinController] Landed on '{(result.IsBomb ? "Bomb" : result.reward != null ? result.reward.name : "null")}' (bomb={result.IsBomb})",
+                    $"[SpinController] Landed on '{(result.IsBomb ? "Bomb" : result.Reward != null ? result.Reward.name : "null")}' (bomb={result.IsBomb})",
                     this);
 
             OnSpinCompleted?.Invoke(result);
         }
 
-        private void OnDisable() => CancelActiveSpin();
+        private void OnDisable() => CancelSpin();
 
-        private void OnDestroy() => CancelActiveSpin();
+        private void OnDestroy() => CancelSpin();
 
-        private void CancelActiveSpin()
+        public void CancelSpin()
         {
+            bool wasSpinning = IsSpinning;
             Tween tween = spinTween;
             spinTween = null;
             pendingResult = null;
@@ -98,6 +111,9 @@ namespace VertigoCase.Wheel
 
             if (tween != null && tween.IsActive())
                 tween.Kill(false);
+
+            if (wasSpinning)
+                OnSpinCancelled?.Invoke();
         }
     }
 }

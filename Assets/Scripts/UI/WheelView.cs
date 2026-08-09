@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -18,13 +19,26 @@ namespace VertigoCase.UI
         [SerializeField] private Image indicatorImage;  // ui_image_wheel_indicator
 
         [Header("Labels")]
-        [SerializeField] private TextMeshProUGUI titleText;         // ui_text_wheel_title_value
-        [SerializeField] private TextMeshProUGUI rewardCalloutText; // ui_text_wheel_reward_value
+        [SerializeField] private TextMeshProUGUI titleText; // ui_text_wheel_title_value
 
         [Header("Slice layout")]
         [SerializeField] private SliceView slicePrefab;        // Prefabs/UI/SliceView_Root
         [SerializeField] private RectTransform sliceContainer; // parent the spawned slices live under
         [SerializeField] private float radius = GameConstants.Wheel.DefaultSliceRadius;
+
+        private void Awake()
+        {
+            if (baseImage == null)
+                throw new InvalidOperationException("Wheel base image is missing.");
+            if (indicatorImage == null)
+                throw new InvalidOperationException("Wheel indicator image is missing.");
+            if (slicePrefab == null)
+                throw new InvalidOperationException("Wheel slice prefab is missing.");
+            if (sliceContainer == null)
+                throw new InvalidOperationException("Wheel slice container is missing.");
+            if (radius <= 0f)
+                throw new InvalidOperationException("Wheel slice radius must be positive.");
+        }
 
         // Refresh whenever the object becomes active (e.g. a panel opens).
         private void OnEnable() => Apply();
@@ -32,7 +46,7 @@ namespace VertigoCase.UI
         // Switch to a different wheel at runtime (e.g. entering a safe/super zone) and redraw it.
         public void SetWheel(WheelData data)
         {
-            wheelData = data;
+            wheelData = data ?? throw new ArgumentNullException(nameof(data));
             Apply();
         }
 
@@ -42,15 +56,15 @@ namespace VertigoCase.UI
         {
             if (wheelData == null) return;
 
-            if (baseImage != null && wheelData.baseSprite != null)
+            if (baseImage != null && wheelData.BaseSprite != null)
             {
-                baseImage.sprite = wheelData.baseSprite;
+                baseImage.sprite = wheelData.BaseSprite;
                 ConfigureContentImage(baseImage);
             }
 
-            if (indicatorImage != null && wheelData.indicatorSprite != null)
+            if (indicatorImage != null && wheelData.IndicatorSprite != null)
             {
-                indicatorImage.sprite = wheelData.indicatorSprite;
+                indicatorImage.sprite = wheelData.IndicatorSprite;
                 ConfigureContentImage(indicatorImage);
             }
 
@@ -62,14 +76,9 @@ namespace VertigoCase.UI
         {
             ApplyLabel(
                 titleText,
-                wheelData.titleLabel,
-                wheelData.labelColor,
+                wheelData.TitleLabel,
+                wheelData.LabelColor,
                 GameConstants.Wheel.TitleLabelFontSize);
-            ApplyLabel(
-                rewardCalloutText,
-                wheelData.rewardCalloutLabel,
-                wheelData.labelColor,
-                GameConstants.Wheel.RewardCalloutFontSize);
         }
 
         // Spawns one SliceView per slice and places them evenly around a circle.
@@ -79,9 +88,13 @@ namespace VertigoCase.UI
 
             // Clear any slices from a previous build, so repeated Apply() calls don't stack duplicates.
             for (int i = sliceContainer.childCount - 1; i >= 0; i--)
-                Destroy(sliceContainer.GetChild(i).gameObject);
+            {
+                GameObject staleSlice = sliceContainer.GetChild(i).gameObject;
+                staleSlice.SetActive(false);
+                Destroy(staleSlice);
+            }
 
-            int count = wheelData.slices.Count;
+            int count = wheelData.Slices.Count;
             if (count == 0) return;
 
             float step = GameConstants.Wheel.FullRotationDegrees / count;
@@ -98,7 +111,7 @@ namespace VertigoCase.UI
                 rt.anchoredPosition = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad)) * radius;
                 rt.localRotation = Quaternion.Euler(0f, 0f, -angle); // keep the icon aligned with its slice
 
-                view.Bind(wheelData.slices[i]);
+                view.Bind(wheelData.Slices[i]);
             }
         }
 

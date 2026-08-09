@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using VertigoCase.Config;
@@ -18,6 +19,16 @@ namespace VertigoCase.UI
 
         internal ZoneProgressBarElements Initialize(ZoneProgressBarLayout layout)
         {
+            if (layout == null) throw new ArgumentNullException(nameof(layout));
+            if (background == null)
+                throw new InvalidOperationException("Zone progress background is missing.");
+            if (itemsRoot == null)
+                throw new InvalidOperationException("Zone progress items root is missing.");
+            if (currentMarker == null || currentMarkerImage == null)
+                throw new InvalidOperationException("Zone progress marker references are missing.");
+            if (cellPrefab == null)
+                throw new InvalidOperationException("Zone progress cell prefab is missing.");
+
             RectTransform root = (RectTransform)transform;
             root.sizeDelta = new Vector2(layout.Width, layout.CurrentMarkerHeight);
             background.sizeDelta = new Vector2(layout.Width, layout.BarHeight);

@@ -13,7 +13,7 @@ namespace VertigoCase.UI
 
         public ZoneProgressBarAnimator(ZoneProgressBarElements elements)
         {
-            this.elements = elements;
+            this.elements = elements ?? throw new ArgumentNullException(nameof(elements));
         }
 
         public void SlideStrip(float targetX, float duration, Action onComplete)

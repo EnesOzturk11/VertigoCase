@@ -41,7 +41,6 @@ namespace VertigoCase.Config
             public const float SliceMinIconScale = 0.75f;
             public const float SliceMaxIconScale = 1.6f;
             public const float TitleLabelFontSize = 44f;
-            public const float RewardCalloutFontSize = 40f;
             public const float LabelMinFontSize = 30f;
             public const float LabelMaxFontSize = 46f;
         }
