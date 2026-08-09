@@ -6,22 +6,33 @@ namespace VertigoCase.Data
 {
     /// <summary>
     /// A single slice on the wheel. This is NOT a ScriptableObject; it lives as a list
-    /// element inside <see cref="WheelData"/>. Every slice (the bomb included) points to a
-    /// RewardData, so the slice itself stays tiny.
+    /// element inside <see cref="WheelData"/>. Hazards are outcomes, not collectible reward types.
     /// </summary>
     [Serializable] // makes Unity show and edit this class in the Inspector
-    public class WheelSlice
+    public sealed class WheelSlice
     {
-        [Tooltip("Reward for this slice. The bomb is a RewardData whose type is Bomb.")]
-        public RewardData reward;
+        [Tooltip("Collectible reward. Leave empty for a hazard slice.")]
+        [SerializeField] private RewardData reward;
 
-        [Tooltip("Amount multiplier applied to the reward's base amount.")]
-        public int multiplier = GameConstants.Wheel.DefaultSliceMultiplier;
+        [Tooltip("Whether this slice ends the run instead of granting a reward.")]
+        [SerializeField] private bool isBomb;
+
+        [Tooltip("Visual used by a hazard slice.")]
+        [SerializeField] private Sprite hazardIcon;
+
+        [Tooltip("Multiplier used to calculate both the displayed and awarded amount.")]
+        [SerializeField, Min(0)]
+        private int multiplier = GameConstants.Wheel.DefaultSliceMultiplier;
 
         [Tooltip("Selection weight. Higher = comes up more often. Rare rewards / the bomb get a lower weight.")]
-        public int weight = GameConstants.Wheel.DefaultSliceWeight;
+        [SerializeField, Min(GameConstants.Wheel.MinimumSliceWeight)]
+        private int weight = GameConstants.Wheel.DefaultSliceWeight;
 
-        // Derived from the reward type, so there is a single source of truth (no extra bool to keep in sync).
-        public bool IsBomb => reward != null && reward.type == RewardType.Bomb;
+        public RewardData Reward => reward;
+        public bool IsBomb => isBomb;
+        public Sprite HazardIcon => hazardIcon;
+        public int Multiplier => multiplier;
+        public int Weight => weight;
+        public Sprite Icon => IsBomb ? hazardIcon : reward != null ? reward.Icon : null;
     }
 }

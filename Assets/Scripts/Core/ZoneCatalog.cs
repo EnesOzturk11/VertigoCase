@@ -41,6 +41,12 @@ namespace VertigoCase.Core
                     throw new InvalidOperationException($"Zone policy at index {i} is missing.");
                 if (policy.Wheel == null)
                     throw new InvalidOperationException($"{policy.name} does not reference a wheel.");
+                if (!Enum.IsDefined(typeof(ZoneType), policy.Type))
+                    throw new InvalidOperationException($"{policy.name} has an unknown zone type.");
+                WheelConfigurationValidator.Validate(
+                    policy.Wheel,
+                    policy.RequiredBombCount,
+                    policy.name);
                 if (policy.OccurrenceInterval < GameConstants.Zones.MinimumOccurrenceInterval)
                     throw new InvalidOperationException($"{policy.name} has an invalid occurrence interval.");
                 if (!types.Add(policy.Type))

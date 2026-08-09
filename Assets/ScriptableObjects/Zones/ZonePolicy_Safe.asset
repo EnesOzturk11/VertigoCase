@@ -16,4 +16,4 @@ MonoBehaviour:
   occurrenceInterval: 5
   wheel: {fileID: 11400000, guid: bbdf5d01ca1934ff1807d3a02f9385b6, type: 2}
   canLeave: 1
-  rewardMultiplier: 2
+  requiredBombCount: 0

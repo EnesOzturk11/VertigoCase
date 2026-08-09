@@ -21,11 +21,19 @@ namespace VertigoCase.UI
         private int currentAmount;
 
         public RewardType Type { get; private set; }
+        public int Amount => currentAmount;
+        public RectTransform IconTarget => iconImage.rectTransform;
+
+        private void Awake()
+        {
+            if (iconImage == null)
+                throw new InvalidOperationException("Inventory row icon is missing.");
+            if (amountText == null)
+                throw new InvalidOperationException("Inventory row amount label is missing.");
+        }
 
         public void Bind(RewardType type, Sprite icon, int amount, bool animate)
         {
-            if (type == RewardType.Bomb)
-                throw new ArgumentException("Bomb cannot be bound to an inventory row.", nameof(type));
             if (icon == null)
                 throw new ArgumentNullException(nameof(icon));
 

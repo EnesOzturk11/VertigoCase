@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using VertigoCase.Config;
 using VertigoCase.Core;
 using VertigoCase.Data;
 
@@ -16,8 +17,11 @@ namespace VertigoCase.UI
         [Serializable]
         private sealed class RewardIcon
         {
-            public RewardType type;
-            public Sprite icon;
+            [SerializeField] private RewardType type;
+            [SerializeField] private Sprite icon;
+
+            public RewardType Type => type;
+            public Sprite Icon => icon;
         }
 
         [Header("References")]
@@ -29,9 +33,16 @@ namespace VertigoCase.UI
         [Header("Icons (RewardType -> Sprite)")]
         [SerializeField] private RewardIcon[] icons;
 
+        [Header("Reward collect animation")]
+        [SerializeField] private RectTransform rewardFlyLayer;
+        [SerializeField] private RectTransform rewardFlyOrigin;
+        [SerializeField, Min(1)] private int rewardFlyIconCount =
+            GameConstants.Inventory.RewardFlyIconCount;
+
         private IInventoryPort gamePort;
         private readonly Dictionary<RewardType, InventoryRowView> rows =
             new Dictionary<RewardType, InventoryRowView>();
+        private RewardFlyAnimator rewardFlyAnimator;
 
         private void Awake()
         {
@@ -42,8 +53,17 @@ namespace VertigoCase.UI
             if (panelRoot == null) throw new InvalidOperationException("Inventory panel is missing.");
             if (content == null) throw new InvalidOperationException("Inventory content is missing.");
             if (rowPrefab == null) throw new InvalidOperationException("Inventory row prefab is missing.");
+            if (rewardFlyLayer == null)
+                throw new InvalidOperationException("Reward fly animation layer is missing.");
+            if (rewardFlyOrigin == null)
+                throw new InvalidOperationException("Reward fly animation origin is missing.");
 
             ValidateIconConfiguration();
+            rewardFlyAnimator = new RewardFlyAnimator(
+                gameObject,
+                rewardFlyLayer,
+                rewardFlyOrigin,
+                rewardFlyIconCount);
             ClearSceneRows();
         }
 
@@ -58,6 +78,8 @@ namespace VertigoCase.UI
         {
             if (gamePort != null)
                 gamePort.OnInventoryChanged -= HandleInventoryChanged;
+
+            rewardFlyAnimator?.CancelAll();
         }
 
         private void HandleInventoryChanged(IReadOnlyDictionary<RewardType, int> inventory)
@@ -69,25 +91,39 @@ namespace VertigoCase.UI
             IReadOnlyDictionary<RewardType, int> inventory,
             bool animate)
         {
+            if (inventory == null) throw new ArgumentNullException(nameof(inventory));
+
+            if (inventory.Count == 0)
+                rewardFlyAnimator.CancelAll();
+
             foreach (RewardIcon entry in icons)
             {
-                int amount = inventory.TryGetValue(entry.type, out int value) ? value : 0;
+                int amount = inventory.TryGetValue(entry.Type, out int value) ? value : 0;
 
                 if (amount <= 0)
                 {
-                    RemoveRow(entry.type, animate);
+                    RemoveRow(entry.Type, animate);
                     continue;
                 }
 
-                if (!rows.TryGetValue(entry.type, out InventoryRowView row))
+                if (!rows.TryGetValue(entry.Type, out InventoryRowView row))
                 {
                     row = Instantiate(rowPrefab, content);
-                    row.Bind(entry.type, entry.icon, amount, animate);
-                    rows.Add(entry.type, row);
+                    row.Bind(entry.Type, entry.Icon, animate ? 0 : amount, animate);
+                    rows.Add(entry.Type, row);
+
+                    if (animate)
+                        rewardFlyAnimator.Play(row, entry.Icon, amount);
                     continue;
                 }
 
-                row.SetAmount(amount, animate);
+                if (animate && amount > row.Amount)
+                    rewardFlyAnimator.Play(row, entry.Icon, amount);
+                else
+                {
+                    rewardFlyAnimator.Cancel(row);
+                    row.SetAmount(amount, animate);
+                }
             }
         }
 
@@ -97,6 +133,7 @@ namespace VertigoCase.UI
                 return;
 
             rows.Remove(type);
+            rewardFlyAnimator.Cancel(row);
             if (animate)
                 row.HideAndDestroy();
             else
@@ -113,25 +150,15 @@ namespace VertigoCase.UI
             {
                 if (entry == null)
                     throw new InvalidOperationException("Inventory icon entries cannot be null.");
-                if (entry.type == RewardType.Bomb)
-                    throw new InvalidOperationException("Bomb is a failure state, not an inventory reward.");
-                if (entry.icon == null)
+                if (entry.Icon == null)
                     throw new InvalidOperationException(
-                        "Inventory icon is missing for " + entry.type + ".");
-                if (!configuredTypes.Add(entry.type))
+                        "Inventory icon is missing for " + entry.Type + ".");
+                if (!configuredTypes.Add(entry.Type))
                     throw new InvalidOperationException(
-                        "Inventory contains a duplicate icon mapping for " + entry.type + ".");
+                        "Inventory contains a duplicate icon mapping for " + entry.Type + ".");
             }
 
-            RewardType[] collectibleTypes =
-            {
-                RewardType.Cash,
-                RewardType.Gold,
-                RewardType.Chest,
-                RewardType.Weapon
-            };
-
-            foreach (RewardType type in collectibleTypes)
+            foreach (RewardType type in Enum.GetValues(typeof(RewardType)))
             {
                 if (!configuredTypes.Contains(type))
                     throw new InvalidOperationException(
@@ -143,7 +170,11 @@ namespace VertigoCase.UI
         {
             rows.Clear();
             for (int i = content.childCount - 1; i >= 0; i--)
-                Destroy(content.GetChild(i).gameObject);
+            {
+                GameObject staleRow = content.GetChild(i).gameObject;
+                staleRow.SetActive(false);
+                Destroy(staleRow);
+            }
         }
     }
 }

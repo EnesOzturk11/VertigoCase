@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using VertigoCase.Config;
 using VertigoCase.Data;
@@ -5,30 +6,42 @@ using VertigoCase.Data;
 namespace VertigoCase.Wheel
 {
     /// <summary>
-    /// Picks the winning slice of a wheel using weighted random. Pure C# (static, no MonoBehaviour),
-    /// so it can be unit-tested without a scene. The outcome is decided here first; the wheel is then
-    /// animated to land on it (SpinController, Day 3 next step).
+    /// Picks the winning slice of a wheel using weighted random. The outcome is decided here first;
+    /// SpinController then animates the wheel to the selected index.
     /// </summary>
     public static class SliceResolver
     {
         // Returns the index of the chosen slice. A higher slice weight means a higher chance.
         public static int Resolve(WheelData wheel)
         {
-            // Clamp weights to the shared minimum so invalid content cannot break the math.
+            if (wheel == null)
+                throw new ArgumentNullException(nameof(wheel));
+            if (wheel.Slices == null || wheel.Slices.Count == 0)
+                throw new InvalidOperationException("A wheel must contain at least one slice.");
+
             int total = 0;
-            for (int i = 0; i < wheel.slices.Count; i++)
-                total += Mathf.Max(GameConstants.Wheel.MinimumSliceWeight, wheel.slices[i].weight);
+            for (int i = 0; i < wheel.Slices.Count; i++)
+            {
+                WheelSlice slice = wheel.Slices[i] ??
+                                   throw new InvalidOperationException(
+                                       $"Wheel slice {i} is missing.");
+                if (slice.Weight < GameConstants.Wheel.MinimumSliceWeight)
+                    throw new InvalidOperationException(
+                        $"Wheel slice {i} has an invalid selection weight.");
+
+                total = checked(total + slice.Weight);
+            }
 
             // Pick a point in [0, total) and walk the slices until that point falls inside one's window.
-            int roll = Random.Range(0, total);
+            int roll = UnityEngine.Random.Range(0, total);
             int acc = 0;
-            for (int i = 0; i < wheel.slices.Count; i++)
+            for (int i = 0; i < wheel.Slices.Count; i++)
             {
-                acc += Mathf.Max(GameConstants.Wheel.MinimumSliceWeight, wheel.slices[i].weight);
+                acc += wheel.Slices[i].Weight;
                 if (roll < acc) return i;
             }
 
-            return wheel.slices.Count - 1; // safety net; unreachable when slices is non-empty
+            return wheel.Slices.Count - 1; // safety net; unreachable when slices is non-empty
         }
     }
 }

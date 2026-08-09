@@ -2,35 +2,47 @@ using System;
 using UnityEngine;
 using TMPro;
 using VertigoCase.Core;
+using VertigoCase.Data;
 
 namespace VertigoCase.UI
 {
     /// <summary>
-    /// Shows the bank balance. A pure View: it subscribes through <see cref="IBalancePort"/> and
-    /// writes the number to a label. No game logic or polling.
+    /// Shows one explicitly selected reward type; heterogeneous rewards are never summed.
     /// </summary>
     public class RewardCounterView : MonoBehaviour
     {
         [SerializeField] private MonoBehaviour game;
         [SerializeField] private TextMeshProUGUI amountText;   // ui_text_reward_value
+        [SerializeField] private RewardType rewardType = RewardType.Cash;
 
-        private IBalancePort gamePort;
+        private IInventoryPort gamePort;
 
         private void Awake()
         {
-            gamePort = game as IBalancePort ??
+            gamePort = game as IInventoryPort ??
                        throw new InvalidOperationException(
-                           "RewardCounterView requires a component implementing IBalancePort.");
+                           "RewardCounterView requires a component implementing IInventoryPort.");
+            if (amountText == null)
+                throw new InvalidOperationException("Reward counter label is missing.");
         }
 
-        private void OnEnable() => gamePort.OnBalanceChanged += HandleBalance;
+        private void OnEnable()
+        {
+            gamePort.OnInventoryChanged += HandleInventory;
+            HandleInventory(gamePort.Inventory);
+        }
 
         private void OnDisable()
         {
             if (gamePort != null)
-                gamePort.OnBalanceChanged -= HandleBalance;
+                gamePort.OnInventoryChanged -= HandleInventory;
         }
 
-        private void HandleBalance(int balance) => amountText.text = balance.ToString();
+        private void HandleInventory(System.Collections.Generic.IReadOnlyDictionary<RewardType, int> inventory)
+        {
+            amountText.text = inventory.TryGetValue(rewardType, out int amount)
+                ? amount.ToString()
+                : "0";
+        }
     }
 }

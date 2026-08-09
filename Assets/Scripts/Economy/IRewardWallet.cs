@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using VertigoCase.Data;
 
@@ -8,9 +7,10 @@ namespace VertigoCase.Economy
     public interface IRewardWallet
     {
         IReadOnlyDictionary<RewardType, int> Amounts { get; }
-        int Total { get; }
-        event Action OnChanged;
         void Add(RewardType type, int amount);
+        int AmountOf(RewardType type);
+        bool CanAfford(RewardType type, int amount);
+        bool Spend(RewardType type, int amount);
         void Clear();
     }
 }

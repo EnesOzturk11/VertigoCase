@@ -24,6 +24,9 @@ namespace VertigoCase.UI
 
         private void Awake()
         {
+            if (leaveButton == null)
+                leaveButton = GetComponent<Button>();
+
             gamePort = game as ILeavePort ??
                        throw new InvalidOperationException(
                            "LeaveButtonBinder requires a component implementing ILeavePort.");
@@ -31,8 +34,6 @@ namespace VertigoCase.UI
 
         private void OnEnable()
         {
-            if (leaveButton == null) return;
-
             leaveButton.onClick.AddListener(gamePort.Leave);
             gamePort.OnStateChanged += HandleStateChanged;
             gamePort.OnZoneChanged += HandleZoneChanged;

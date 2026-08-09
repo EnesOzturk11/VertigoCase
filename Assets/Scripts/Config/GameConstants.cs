@@ -41,7 +41,6 @@ namespace VertigoCase.Config
             public const float SliceMinIconScale = 0.75f;
             public const float SliceMaxIconScale = 1.6f;
             public const float TitleLabelFontSize = 44f;
-            public const float RewardCalloutFontSize = 40f;
             public const float LabelMinFontSize = 30f;
             public const float LabelMaxFontSize = 46f;
         }
@@ -49,9 +48,6 @@ namespace VertigoCase.Config
         public static class Rewards
         {
             public const int DefaultBaseAmount = 100;
-            public const int DefaultReviveGoldCost = 25;
-            public const int MinimumZoneMultiplier = 1;
-            public const int DefaultZoneMultiplier = MinimumZoneMultiplier;
         }
 
         public static class Zones
@@ -70,15 +66,22 @@ namespace VertigoCase.Config
             public const float CurrentMarkerHeight = 120f;
             public const float TransitionSeconds = 0.35f;
             public const float CurrentMarkerWidthPadding = 12f;
-            public const float FrameShadowOffset = 2f;
-            public const float IndicatorWidth = 42f;
-            public const float IndicatorHeight = 58f;
-            public const float IndicatorTopOffset = 8f;
+            public const float MarkerPulseScale = 0.1f;
+            public const float MarkerPulseSeconds = 0.2f;
+            public const int MarkerPulseVibrato = 5;
+            public const float MarkerPulseElasticity = 0.45f;
         }
 
         public static class Inventory
         {
             public const float RowAnimationSeconds = 0.2f;
+            public const int RewardFlyIconCount = 5;
+            public const float RewardFlyIconSize = 58f;
+            public const float RewardFlyScatterRadius = 64f;
+            public const float RewardFlyScatterSeconds = 0.18f;
+            public const float RewardFlyTravelSeconds = 0.55f;
+            public const float RewardFlyStaggerSeconds = 0.055f;
+            public const float RewardFlyFadeSeconds = 0.12f;
         }
     }
 }
